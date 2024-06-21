@@ -19,5 +19,9 @@ def main():
 
 @app.get("/products/create")
 async def create(producer: Annotated[AIOKafkaProducer, Depends(get_kafka_producer)]):
-    await producer.send("products", b"Hello World")
+    await producer.send("order", b"Hello World")
     return {"message": "products"}
+
+@app.get("/products") 
+async def view_products():
+    await consume_events('order', 'broker:19092')
