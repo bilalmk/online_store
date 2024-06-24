@@ -1,5 +1,5 @@
 version: '3.8'
-name: online_store
+# name: "online_store"
 
 services:
   broker:

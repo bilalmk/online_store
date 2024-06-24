@@ -12,6 +12,7 @@ uvicorn = {extras = ["standard"], version = "^0.30.1"}
 sqlmodel = "^0.0.19"
 confluent-kafka = "^2.4.0"
 python-dotenv = "^1.0.1"
+aiokafka = "^0.10.0"
 
 
 [build-system]

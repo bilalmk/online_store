@@ -23,5 +23,5 @@ def main():
 
 @app.get("/products/create")
 async def create(producer: Annotated[AIOKafkaProducer, Depends(get_kafka_producer)]):
-    await producer.send(config.KAFKA_ORDER_TOPIC, b"Hello World")
+    await producer.send(config.KAFKA_ORDER_TOPIC, b"Hello World from products")
     return {"message": "products"}

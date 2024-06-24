@@ -3,3 +3,4 @@
 12:25:14.242903  - Received message: Hello World on topic order
 12:35:48.215188  - Received message: Hello World on topic order
 12:37:19.358349  - Received message: Hello World on topic order
+06:36:17.680774  - Received message: Hello World from products on topic products

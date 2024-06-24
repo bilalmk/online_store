@@ -5,8 +5,9 @@ from fastapi import Depends, FastAPI
 from app import config
 from confluent_kafka import Producer
 
-from app.kafka_consumer import consume_events
+#from app.kafka_consumer import consume_events
 from app.kafka_producer import get_kafka_producer
+from app.kafka_consumer import consume_events
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
@@ -24,5 +25,5 @@ def main():
 
 @app.get("/users/create")
 async def create(producer: Annotated[Producer, Depends(get_kafka_producer)]):
-    await producer.send(config.KAFKA_ORDER_TOPIC, b"Hello World")
+    await producer.send(config.KAFKA_ORDER_TOPIC, b"Hello World from users")
     return {"message": "users"}
