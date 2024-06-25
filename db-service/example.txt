@@ -1,0 +1,6 @@
+10:53:55.868143  - Received message: Hello World from products on topic users
+11:17:29.901500  - Received message: {"id": 1, "username": "string", "email": "string", "password": "string"} on topic users
+11:18:56.599395  - Received message: {"id": 2, "username": "bilalmk", "email": "bilalmK@gmail.com", "password": "asfsafddsf"} on topic users
+11:22:20.912679  - Received message: {"id": 2, "username": "jamla", "email": "bilalmK@gmail.com", "password": "asfsafddsf"} on topic users
+11:30:14.929505  - Received message: {"id": 1, "username": "bilalmk", "email": "bilalmk@gmail.com", "password": "433434"} on topic users
+11:30:42.900218  - Received message: {"id": 2, "username": "jamal", "email": "jamalnasir@gmail.com", "password": "433434"} on topic users

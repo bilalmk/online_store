@@ -30,7 +30,7 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./users:/code
-      - shared-data:/code/shared
+      - ./shared:/code/shared
     depends_on:
       - broker
     ports:

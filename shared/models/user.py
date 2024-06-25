@@ -5,4 +5,3 @@ class User(SQLModel, table=True):
     username: str
     email: str
     password: str
-
