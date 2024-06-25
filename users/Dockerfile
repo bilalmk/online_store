@@ -3,11 +3,13 @@ FROM python:3.12
 WORKDIR /code
 
 COPY pyproject.toml /code/
-COPY poetry.lock /code/
+# COPY poetry.lock /code/
+COPY shared-0.1.0-py3-none-any.whl /code/
 
 RUN pip install poetry
 RUN poetry config virtualenvs.create false
 RUN poetry install
+RUN pip install shared-0.1.0-py3-none-any.whl
 
 COPY . /code/
 

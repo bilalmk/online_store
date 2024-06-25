@@ -10,8 +10,8 @@ from app import config
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     print("starting lifespan process")
-    await asyncio.sleep(10)
-    task = asyncio.create_task(consume_events(config.KAFKA_ORDER_TOPIC, config.BOOTSTRAP_SERVER))
+    # await asyncio.sleep(10)
+    # task = asyncio.create_task(consume_events(config.KAFKA_ORDER_TOPIC, config.BOOTSTRAP_SERVER))
     yield
 
 app = FastAPI(lifespan=lifespan, title="Hello World API with DB")

@@ -4,12 +4,12 @@ import os
 from datetime import datetime
 
 
-async def consume_events(topic, bootstrap_servers):
+async def consume_events(topic, group_id):
     # Create a consumer instance.
     consumer = AIOKafkaConsumer(
         topic,
         bootstrap_servers=config.BOOTSTRAP_SERVER,
-        group_id=config.KAFKA_CONSUMER_GROUP_ID,
+        group_id=group_id,
         auto_offset_reset="earliest",
     )
 

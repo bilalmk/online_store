@@ -30,6 +30,7 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./users:/code
+      - shared-data:/code/shared
     depends_on:
       - broker
     ports:
@@ -41,13 +42,24 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./products:/code
+      - shared-data:/code/shared
     depends_on:
       - broker
     ports:
       - "8002:8000"
 
+  db-service:
+    build:
+      context: ./db-service
+      dockerfile: Dockerfile
+    volumes:
+      - ./db-service:/code
+      - ./shared:/code/shared
+    depends_on:
+      - broker
+    ports:
+      - "8003:8000"
   
-
   kafka-ui:
     image: provectuslabs/kafka-ui
     container_name: kafka-ui
@@ -62,4 +74,12 @@ services:
 
 networks:
   default:  
-    driver: bridge      
+    driver: bridge
+
+volumes:
+  shared-data:
+    driver: local
+    driver_opts:
+      type: 'none'
+      device: './shared'  # Path to your shared directory
+      o: 'bind'   
