@@ -1,6 +1,7 @@
-10:53:55.868143  - Received message: Hello World from products on topic users
-11:17:29.901500  - Received message: {"id": 1, "username": "string", "email": "string", "password": "string"} on topic users
-11:18:56.599395  - Received message: {"id": 2, "username": "bilalmk", "email": "bilalmK@gmail.com", "password": "asfsafddsf"} on topic users
-11:22:20.912679  - Received message: {"id": 2, "username": "jamla", "email": "bilalmK@gmail.com", "password": "asfsafddsf"} on topic users
-11:30:14.929505  - Received message: {"id": 1, "username": "bilalmk", "email": "bilalmk@gmail.com", "password": "433434"} on topic users
-11:30:42.900218  - Received message: {"id": 2, "username": "jamal", "email": "jamalnasir@gmail.com", "password": "433434"} on topic users
+10:45:00.312960  - Received message:{'username': 'bilalmk', 'email': 'bilalmk@gmail.com', 'full_name': 'Bilal Muhammad Khan', 'address': 'fb aera', 'phone_number': '03217001054', 'password': '123456'}  on topic users
+10:46:42.176121  - Received message:{'username': 'bilalmk', 'email': 'bilalmk@gmail.com', 'full_name': 'Bilal Muhammad Khan', 'address': 'fb aera', 'phone_number': '03217001054', 'password': '123456'}  on topic users
+10:53:21.774680  - Received message:{'username': 'bilalmk', 'email': 'bilalmk@gmail.com', 'full_name': 'Bilal Muhammad Khan', 'address': 'fb aera', 'phone_number': '03217001054', 'password': '123456'}  on topic users
+11:04:01.752329  - Received message:{'username': 'bilalmk', 'email': 'bilalmk@gmail.com', 'full_name': 'Bilal Muhammad Khan', 'address': 'fb aera', 'phone_number': '03217001054', 'password': '123456'}  on topic users
+11:10:19.686083  - Received message:{'username': 'bilalmk', 'email': 'bilalmk@gmail.com', 'full_name': 'Bilal Muhammad Khan', 'address': 'fb aera', 'phone_number': '03217001054'}  on topic users
+11:11:17.131861  - Received message:{'username': 'bilalmk', 'email': 'bilalmk@gmail.com', 'full_name': 'Bilal Muhammad Khan', 'address': 'fb aera', 'phone_number': '03217001054', 'password': '123456'}  on topic users
+11:42:39.825250  - Received message:{'username': 'bilalmk', 'email': 'bilalmk@gmail.com', 'full_name': 'Bilal Muhammad Khan', 'address': 'FB Area', 'phone_number': '03217001054', 'password': '123456'}  on topic users

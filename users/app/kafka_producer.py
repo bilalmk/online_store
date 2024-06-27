@@ -1,5 +1,6 @@
 from aiokafka import AIOKafkaProducer  # type: ignore
 from app import config
+import json
 
 
 async def get_kafka_producer():

@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from typing import Annotated, AsyncGenerator
 from fastapi import Depends, FastAPI
 from app import config
-from shared.models.user import User
+from shared.models.user import User, CreateUser
 from fastapi.encoders import jsonable_encoder
 
 #from app.kafka_consumer import consume_events
@@ -27,8 +27,13 @@ def main():
 
 
 @app.post("/users/create")
-async def create(user:User,producer: Annotated[AIOKafkaProducer, Depends(get_kafka_producer)]):
-    print(type(user))
-    obj = json.dumps(user.dict()).encode('utf-8')
-    await producer.send(config.KAFKA_USER_TOPIC, obj)
+async def create(user:CreateUser, producer: Annotated[AIOKafkaProducer, Depends(get_kafka_producer)]):
+    message = {
+            "operation": "create",
+            "entity": "user",
+            "data": user.dict()
+        }
+    #print(type(user))
+    obj = json.dumps(message).encode('utf-8')
+    await producer.send(config.KAFKA_USER_TOPIC, value=obj)
     return {"message": "User registered successfully"}

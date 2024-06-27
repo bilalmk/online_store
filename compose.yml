@@ -36,17 +36,17 @@ services:
     ports:
       - "8001:8000"
 
-  products:
-    build:
-      context: ./products
-      dockerfile: Dockerfile
-    volumes:
-      - ./products:/code
-      - shared-data:/code/shared
-    depends_on:
-      - broker
-    ports:
-      - "8002:8000"
+  # products:
+  #   build:
+  #     context: ./products
+  #     dockerfile: Dockerfile
+  #   volumes:
+  #     - ./products:/code
+  #     - shared-data:/code/shared
+  #   depends_on:
+  #     - broker
+  #   ports:
+  #     - "8002:8000"
 
   db-service:
     build:
@@ -72,11 +72,25 @@ services:
     depends_on:
       - broker
 
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-db
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes" 
+      MYSQL_DATABASE: imtiaz
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+
 networks:
   default:  
     driver: bridge
 
 volumes:
+  mysql-data:
+    driver: local
+
   shared-data:
     driver: local
     driver_opts:

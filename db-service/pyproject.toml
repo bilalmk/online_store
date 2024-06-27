@@ -12,6 +12,9 @@ uvicorn = {extras = ["standard"], version = "^0.30.1"}
 sqlmodel = "^0.0.19"
 python-dotenv = "^1.0.1"
 aiokafka = "^0.10.0"
+passlib = "^1.7.4"
+pymysql = "^1.1.1"
+mysqlclient = "^2.2.4"
 
 [build-system]
 requires = ["poetry-core"]
