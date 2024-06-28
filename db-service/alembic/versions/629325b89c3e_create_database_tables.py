@@ -29,6 +29,7 @@ def upgrade() -> None:
         sa.Column('last_name', sa.String(50)),
         sa.Column('address', sa.String(255)),
         sa.Column('phone_number', sa.String(20)),
+        sa.Column('guid',sa.Char(16), nullable=False),
         sa.Column('created_at', sa.TIMESTAMP, server_default=sa.func.current_timestamp())
     )
     

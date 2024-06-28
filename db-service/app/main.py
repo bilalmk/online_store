@@ -26,11 +26,6 @@ async def run_alembic_upgrade():
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     print("starting lifespan process")
     
-    # executor = concurrent.futures.ThreadPoolExecutor()
-    
-    # loop = asyncio.get_event_loop()
-    # await loop.run_in_executor(executor, command.upgrade, alembic_cfg, "head")
-    
     await asyncio.sleep(10)
     asyncio.create_task(
         consume_events(config.KAFKA_USER_TOPIC, config.KAFKA_USER_CONSUMER_GROUP_ID)
@@ -41,19 +36,15 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         )
     )
     asyncio.create_task(run_alembic_upgrade())
+    
     # asyncio.create_task(
     #     command.upgrade(alembic_cfg, "head")
     # )
+    
     yield
 
 
 app = FastAPI(lifespan=lifespan, title="Hello World db service API")
-
-# @app.on_event("startup")
-# async def startup_event():
-#     # Schedule Alembic upgrade to run in the background
-#     asyncio.create_task(run_alembic_upgrade())
-
 
 @app.get("/")
 def main():
