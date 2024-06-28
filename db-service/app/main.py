@@ -26,10 +26,10 @@ async def run_alembic_upgrade():
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     print("starting lifespan process")
     
-    executor = concurrent.futures.ThreadPoolExecutor()
+    # executor = concurrent.futures.ThreadPoolExecutor()
     
-    loop = asyncio.get_event_loop()
-    await loop.run_in_executor(executor, command.upgrade, alembic_cfg, "head")
+    # loop = asyncio.get_event_loop()
+    # await loop.run_in_executor(executor, command.upgrade, alembic_cfg, "head")
     
     await asyncio.sleep(10)
     asyncio.create_task(

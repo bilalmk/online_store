@@ -56,6 +56,7 @@ services:
       - ./db-service:/code
       - ./shared:/code/shared
     depends_on:
+      - mysql
       - broker
     ports:
       - "8003:8000"
@@ -78,10 +79,14 @@ services:
     environment:
       MYSQL_ALLOW_EMPTY_PASSWORD: "yes" 
       MYSQL_DATABASE: imtiaz
+      MYSQL_USER: imtiaz
+      MYSQL_ROOT_USER: root
+      MYSQL_PASSWORD: as
     ports:
       - "3307:3306"
     volumes:
       - mysql-data:/var/lib/mysql
+      - ./mysql-init:/docker-entrypoint-initdb.d
 
 networks:
   default:  
