@@ -37,3 +37,21 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, config.SECRET_KEY, algorithm=config.ALGORITHM)
     return encoded_jwt
+
+def decode_access_token(token: str):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, config.SECRET_KEY, algorithms=[config.ALGORITHM])
+        username = str(payload.get("sub"))
+        return username
+        # user = get_user(fake_users_db, username)
+        # if user is None:
+        #     raise credentials_exception
+        # token_data = TokenData(username=username)
+        # return token_data
+    except JWTError:
+        raise credentials_exception

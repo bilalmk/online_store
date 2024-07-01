@@ -13,8 +13,12 @@ engine = create_engine(connection)  # type: ignore
 def get_session():
     with Session(engine) as session:
         yield session
+        
+def get_session_new():
+    with Session(engine) as session:
+        yield session
 
-sessionDep = Annotated[Session, Depends(get_session)]
+sessionDep = Annotated[Session, Depends(get_session_new)]
 
 BOOTSTRAP_SERVER = os.environ.get("BOOTSTRAP_SERVER")
 KAFKA_USER_TOPIC = os.environ.get("KAFKA_USER_TOPIC")

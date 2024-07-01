@@ -7,18 +7,20 @@ import os
 from datetime import datetime
 
 responses = {}
+
+
 async def consume_response_from_kafka(consumer, request_id):
-    #count=0
+    # count=0
     async for msg in consumer:
-        #if(count>50):
+        # if(count>50):
         #    break
-        #count = count+1
+        # count = count+1
         response = json.loads(msg.value.decode("utf-8"))
-        status = response.get('status').get('status')
-        #print(response.get('request_id'))
-        #print(response.get('status').get('status'))
-        #print(request_id)
-        if response.get('request_id') == request_id:
+        status = response.get("status").get("status")
+        # print(response.get('request_id'))
+        # print(response.get('status').get('status'))
+        # print(request_id)
+        if response.get("request_id") == request_id:
             if status == "success":
                 return {"message": "User created successfully"}
             elif status == "duplicate":
@@ -29,8 +31,9 @@ async def consume_response_from_kafka(consumer, request_id):
                 return {"message": "Failed to create user."}
             else:
                 return {"message": "failed to create"}
-        #raise HTTPException(status_code=500, detail="No response from db-service")
-        
+        # raise HTTPException(status_code=500, detail="No response from db-service")
+
+
 async def get_kafka_consumer():
     consumer = AIOKafkaConsumer(
         config.KAFKA_USER_DB_RESPONSE,
@@ -40,7 +43,8 @@ async def get_kafka_consumer():
     )
     await consumer.start()
     return consumer
-        
+
+
 # async def get_kafka_consumer_1():
 #     consumer = AIOKafkaConsumer(
 #         config.KAFKA_USER_DB_RESPONSE,
@@ -55,7 +59,6 @@ async def get_kafka_consumer():
 #         await consumer.stop()
 
 
-
 # async def consume_events(topic):
 #     # Create a consumer instance.
 #     consumer = AIOKafkaConsumer(
@@ -67,22 +70,22 @@ async def get_kafka_consumer():
 
 #     # Start the consumer.
 #     await consumer.start()
-    
+
 #     async for message in consumer:
 #         #response = message.value.decode()
 #         response = json.loads(message.value.decode("utf-8"))
 #         responses[response['uuid']] = response["status"]
 #         log_message(response, message.topic)
-        
+
 #     # async for message in consumer:
 #     #     try:
 #     #         filename = "example.txt"
 #     #         # Continuously listen for messages.
-                
+
 #     #         print(
 #     #             f"Received message: {message.value.decode()} on topic {message.topic}"
 #     #         )
-            
+
 #     #         content = (
 #     #             f"{datetime.now().time()}  - Received message: {message.value.decode()} on topic {message.topic}"
 #     #         )

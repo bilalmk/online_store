@@ -88,6 +88,19 @@ services:
       - mysql-data:/var/lib/mysql
       - ./mysql-init:/docker-entrypoint-initdb.d
 
+  authentication:
+    build:
+      context: ./authentication
+      dockerfile: Dockerfile
+    volumes:
+      - ./authentication:/code
+      - ./shared:/code/shared
+    depends_on:
+      - mysql
+      - broker
+    ports:
+      - "8004:8000"
+
 networks:
   default:  
     driver: bridge
