@@ -1,1 +1,23 @@
-06:35:23.277663  - Received message: Hello World from users on topic users
+19:52:07.995642  - Received message: {'uuid': 'acbe4f8c-e8e2-48fb-a19b-4004868da704', 'status': {'status': 'duplicate'}} on topic db_response_user
+19:54:11.026745  - Received message: {'uuid': 'ce9588d6-3560-4293-b728-499e3e18a958', 'status': {'status': 'duplicate'}} on topic db_response_user
+19:55:31.028146  - Received message: {'uuid': 'ab8faed1-2263-4c72-b465-5221f773f07f', 'status': {'status': 'duplicate'}} on topic db_response_user
+19:57:14.534039  - Received message: {'uuid': 'eae2c48a-fd10-4278-8895-47805e95df3b', 'status': {'status': 'duplicate'}} on topic db_response_user
+20:00:03.056936  - Received message: {'uuid': '91c02b4a-7d52-421b-9f68-129df213985f', 'status': {'status': 'duplicate'}} on topic db_response_user
+20:01:27.246217  - Received message: {'uuid': 'bdb13f82-e452-41c6-b65a-2dcb6879aacd', 'status': {'status': 'duplicate'}} on topic db_response_user
+20:03:12.268666  - Received message: {'uuid': '79aa1bb9-1f15-4ea1-9e3a-62b89250b5be', 'status': {'status': 'duplicate'}} on topic db_response_user
+05:34:55.807961  - Received message: {'uuid': '37c774a5-bf9e-4b9e-8222-61f3e0729cd5', 'status': {'status': 'duplicate'}} on topic db_response_user
+05:35:14.340077  - Received message: {'uuid': '7007b79a-3652-4fde-9bf0-15e6b0a33862', 'status': {'status': 'duplicate'}} on topic db_response_user
+05:35:16.516952  - Received message: {'uuid': '086a67b4-1546-470a-8b7a-c2038fcb13b6', 'status': {'status': 'duplicate'}} on topic db_response_user
+05:35:19.336596  - Received message: {'uuid': 'ee0abf9e-5f06-4a1b-983d-e5fb25695c1f', 'status': {'status': 'duplicate'}} on topic db_response_user
+05:36:14.079640  - Received message: {'uuid': '3e17b590-557f-4bc1-b640-a03e1f0027f2', 'status': {'status': 'duplicate'}} on topic db_response_user
+05:36:18.187114  - Received message: {'uuid': 'd7f01174-324b-42db-b6d5-475a84e7842e', 'status': {'status': 'duplicate'}} on topic db_response_user
+05:36:27.374741  - Received message: {'uuid': 'f14d8183-505b-4258-8ba9-f34cacb0363a', 'status': {'status': 'duplicate'}} on topic db_response_user
+05:37:53.487583  - Received message: {'uuid': '82437bb2-ee03-411b-a731-94371abf46f4', 'status': {'status': 'duplicate'}} on topic db_response_user
+05:37:53.499250  - Received message: {'uuid': 'df578f7b-ca7d-4cf0-9e11-10424adb1ec2', 'status': {'status': 'duplicate'}} on topic db_response_user
+05:37:54.174927  - Received message: {'uuid': 'cbbc106b-75aa-4e5e-a027-4e8999780f6f', 'status': {'status': 'duplicate'}} on topic db_response_user
+05:39:14.929404  - Received message: {'uuid': '005afebb-5aee-4c44-8861-8042c2c61fe6', 'status': {'status': 'duplicate'}} on topic db_response_user
+05:39:23.592590  - Received message: {'uuid': 'ee01b343-3709-4b15-aacd-876782749d3a', 'status': {'status': 'duplicate'}} on topic db_response_user
+05:39:25.685945  - Received message: {'uuid': '26b7677d-f940-47db-a1be-3259714e9b23', 'status': {'status': 'duplicate'}} on topic db_response_user
+05:39:38.727384  - Received message: {'uuid': 'fc8d05f7-b047-4262-9241-cd830cf4e4d8', 'status': {'status': 'duplicate'}} on topic db_response_user
+05:59:02.239013  - Received message: {'uuid': '12b75d5a-2d9e-4983-aedf-7383418bbef5', 'status': {'status': 'duplicate'}} on topic db_response_user
+06:00:18.749212  - Received message: {'uuid': '7e7f5f77-ca30-4254-8d32-076e10063a3e', 'status': {'status': 'duplicate'}} on topic db_response_user

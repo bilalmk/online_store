@@ -35,7 +35,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
             config.KAFKA_PRODUCT_TOPIC, config.KAFKA_PRODUCT_CONSUMER_GROUP_ID
         )
     )
-    asyncio.create_task(run_alembic_upgrade())
+    # asyncio.create_task(run_alembic_upgrade())
     
     # asyncio.create_task(
     #     command.upgrade(alembic_cfg, "head")
