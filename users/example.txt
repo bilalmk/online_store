@@ -64,3 +64,5 @@
 06:47:12.904665  - Received message: {'uuid': '53fe5e42-b591-4617-98b0-ac53705fb39b', 'status': {'status': 'failed'}} on topic db_response_user
 06:48:08.821928  - Received message: {'uuid': '08ea3cdf-c6ad-404f-a57c-5ca5d916a21f', 'status': {'status': 'duplicate'}} on topic db_response_user
 06:51:25.892476  - Received message: {'uuid': 'e6192132-a73a-4bc0-a74b-2bd984d87bd4', 'status': {'status': 'success'}} on topic db_response_user
+07:27:59.413301  - Received message: {'uuid': 'c1b164dc-bec1-474b-a62a-f5c167e12d6a', 'status': {'status': 'exist'}} on topic db_response_user
+07:32:29.619040  - Received message: {'uuid': '81b0a228-5087-4916-9ae7-98ddb00af691', 'status': {'status': 'exist'}} on topic db_response_user

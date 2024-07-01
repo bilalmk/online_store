@@ -19,7 +19,7 @@ class UserOperation:
             if self.operation == "create":
                 hero_crud = User_Crud(session)
                 status = hero_crud.create_user(CreateUser(**self.entity_data))
-                response = {"uuid": self.request_id, "status": status}
+                response = {"request_id": self.request_id, "status": status}
                 obj = json.dumps(response).encode("utf-8")
                 await send_producer(config.KAFKA_USER_DB_RESPONSE, obj)
             elif self.operation == "update":

@@ -25,14 +25,14 @@ def upgrade() -> None:
         sa.Column(
             "id", sa.Integer, primary_key=True, nullable=False, autoincrement=True
         ),
-        sa.Column("username", sa.String(50), nullable=False, unique=True),
+        sa.Column("username", sa.String(50), nullable=False),
         sa.Column("email", sa.String(100), nullable=False, unique=True),
         sa.Column("password", sa.String(255), nullable=False),
         sa.Column("first_name", sa.String(50)),
         sa.Column("last_name", sa.String(50)),
         sa.Column("address", sa.String(255)),
         sa.Column("phone_number", sa.String(20)),
-        sa.Column("guid", sa.CHAR(16), nullable=False),
+        sa.Column("guid", sa.CHAR(36), nullable=False),
         sa.Column(
             "created_at", sa.TIMESTAMP, server_default=sa.func.current_timestamp()
         ),

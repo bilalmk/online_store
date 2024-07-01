@@ -13,6 +13,7 @@ sqlmodel = "^0.0.19"
 confluent-kafka = "^2.4.0"
 python-dotenv = "^1.0.1"
 aiokafka = "^0.10.0"
+kafka-python = "^2.0.2"
 
 
 [build-system]

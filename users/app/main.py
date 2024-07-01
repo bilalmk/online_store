@@ -10,7 +10,7 @@ from shared.models.user import User, CreateUser
 from app.kafka_producer import get_kafka_producer
 from app.kafka_consumer import (
     consume_events,
-    # get_kafka_consumer,
+    get_kafka_consumer,
     consume_response_from_kafka,
     responses,
 )
@@ -21,8 +21,8 @@ import json
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     print("starting lifespan process")
-    await asyncio.sleep(10)
-    task = asyncio.create_task(consume_events(config.KAFKA_USER_DB_RESPONSE))
+    #await asyncio.sleep(10)
+    #task = asyncio.create_task(consume_events(config.KAFKA_USER_DB_RESPONSE))
     yield
 
 
@@ -36,7 +36,8 @@ def main():
 
 @app.post("/users/create")
 async def create(
-    user: CreateUser, producer: Annotated[AIOKafkaProducer, Depends(get_kafka_producer)]
+    user: CreateUser, 
+    producer: Annotated[AIOKafkaProducer, Depends(get_kafka_producer)]
 ):
     message = {
         "request_id": user.guid,
@@ -44,32 +45,21 @@ async def create(
         "entity": "user",
         "data": user.dict(),
     }
-    print(message)
+    
     # print(type(user))
     obj = json.dumps(message).encode("utf-8")
     await producer.send(config.KAFKA_USER_TOPIC, value=obj)
     #await asyncio.sleep(10)
-    for _ in range(10):  # Timeout after 10 * 0.5 = 5 seconds
-        print(responses)
-        sys.stdout.flush()
-        if user.guid in responses:
-            response = responses.pop(user.guid)
-            if response.get("status") == "success":
-                return {"message": "User created successfully"}
-            elif response.get("status") == "duplicate":
-                return {"message": "Record already exists."}
-            elif response.get("status") == "exist":
-                return {"message": "User already exists."}
-            elif response.get("status") == "failed":
-                return {"message": "Failed to create user."}
-            else:
-                return {"message": "failed to create"}
-                # raise HTTPException(status_code=400, detail="Failed to create user")
-        await asyncio.sleep(0.5)
 
     # raise HTTPException(status_code=500, detail="No response from db-service")
+    consumer = await get_kafka_consumer()
+    try:
+        status_message = await consume_response_from_kafka(consumer, user.guid)
+    finally:
+        await consumer.stop()
+    
+    if status_message:
+        return status_message
 
-    # status_message = await consume_response_from_kafka(consumer, user.guid)
-    #print("end consumer")
     status_message = {"message": "Created"}
     return status_message
