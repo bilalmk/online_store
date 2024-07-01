@@ -1,5 +1,6 @@
 import asyncio
 from contextlib import asynccontextmanager
+import sys
 from typing import Annotated, AsyncGenerator
 from fastapi import Depends, FastAPI, HTTPException
 from app import config
@@ -43,20 +44,24 @@ async def create(
         "entity": "user",
         "data": user.dict(),
     }
+    print(message)
     # print(type(user))
     obj = json.dumps(message).encode("utf-8")
     await producer.send(config.KAFKA_USER_TOPIC, value=obj)
     #await asyncio.sleep(10)
     for _ in range(10):  # Timeout after 10 * 0.5 = 5 seconds
+        print(responses)
+        sys.stdout.flush()
         if user.guid in responses:
             response = responses.pop(user.guid)
-            #print(response)
             if response.get("status") == "success":
-                return {"message": "Request inserted into DB successfully"}
+                return {"message": "User created successfully"}
             elif response.get("status") == "duplicate":
                 return {"message": "Record already exists."}
+            elif response.get("status") == "exist":
+                return {"message": "User already exists."}
             elif response.get("status") == "failed":
-                return {"message": "Failed to insert request into DB."}
+                return {"message": "Failed to create user."}
             else:
                 return {"message": "failed to create"}
                 # raise HTTPException(status_code=400, detail="Failed to create user")

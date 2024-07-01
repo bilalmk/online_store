@@ -19,7 +19,7 @@ class User_Crud:
             statement = select(User).where(User.email == user.email)
             result = self.session.exec(statement).first()
             if result:
-                return {"status": "duplicate"}
+                return {"status": "exist"}
         
             user.password = self.get_hash_password(user.password)
             # db_user = User(**user.dict(exclude={"password"}))
