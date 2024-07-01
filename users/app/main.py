@@ -9,20 +9,20 @@ from shared.models.user import User, CreateUser
 # from app.kafka_consumer import consume_events
 from app.kafka_producer import get_kafka_producer
 from app.kafka_consumer import (
-    consume_events,
+    # consume_events,
     get_kafka_consumer,
     consume_response_from_kafka,
     responses,
 )
-from aiokafka import AIOKafkaProducer, AIOKafkaConsumer
+from aiokafka import AIOKafkaProducer
 import json
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     print("starting lifespan process")
-    #await asyncio.sleep(10)
-    #task = asyncio.create_task(consume_events(config.KAFKA_USER_DB_RESPONSE))
+    # await asyncio.sleep(10)
+    # task = asyncio.create_task(consume_events(config.KAFKA_USER_DB_RESPONSE))
     yield
 
 
@@ -36,8 +36,7 @@ def main():
 
 @app.post("/users/create")
 async def create(
-    user: CreateUser, 
-    producer: Annotated[AIOKafkaProducer, Depends(get_kafka_producer)]
+    user: CreateUser, producer: Annotated[AIOKafkaProducer, Depends(get_kafka_producer)]
 ):
     message = {
         "request_id": user.guid,
@@ -45,11 +44,11 @@ async def create(
         "entity": "user",
         "data": user.dict(),
     }
-    
+
     # print(type(user))
     obj = json.dumps(message).encode("utf-8")
     await producer.send(config.KAFKA_USER_TOPIC, value=obj)
-    #await asyncio.sleep(10)
+    # await asyncio.sleep(10)
 
     # raise HTTPException(status_code=500, detail="No response from db-service")
     consumer = await get_kafka_consumer()
@@ -57,7 +56,7 @@ async def create(
         status_message = await consume_response_from_kafka(consumer, user.guid)
     finally:
         await consumer.stop()
-    
+
     if status_message:
         return status_message
 

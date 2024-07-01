@@ -27,7 +27,7 @@ class CreateUser(BaseUser):
 
 class PublicUser(BaseUser):
     id: int
-    password_hash: str
+    #password_hash: str
 
 
 class UpdateUser(SQLModel):
