@@ -8,36 +8,42 @@ from jose import JWTError, jwt
 
 oauth2_authentication = OAuth2PasswordBearer(tokenUrl="token")
 app = FastAPI()
+
+
 @app.post("/generate_token", response_model=Token)
-def login(username: str = Form(...)):
+def login(username: str = Form(...), id: int = Form(...)):
     try:
         access_token_expires = timedelta(minutes=config.ACCESS_TOKEN_EXPIRE_MINUTES)
         access_token = create_access_token(
-            data={"sub": username}, expires_delta=access_token_expires
+            data={"sub": username, "userid": id}, expires_delta=access_token_expires
         )
-        
-        return Token(
-            access_token=access_token,
-            token_type="bearer",
-            user_name=username
-        )
+
+        return Token(access_token=access_token, token_type="bearer", user_name=username)
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_200_OK,
             detail=str(e),
-            headers={"WWW-Authenticate": "Bearer"}
+            headers={"WWW-Authenticate": "Bearer"},
         )
-        
+
+
+@app.post("/get_token_data")
+def get_token_data(token: str = Form(...)):
+    token_data = decode_access_token(token)
+    return token_data
+
+
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
     else:
         expire = datetime.now(timezone.utc) + timedelta(minutes=15)
-        
+
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, config.SECRET_KEY, algorithm=config.ALGORITHM)
     return encoded_jwt
+
 
 def decode_access_token(token: str):
     credentials_exception = HTTPException(
@@ -48,11 +54,7 @@ def decode_access_token(token: str):
     try:
         payload = jwt.decode(token, config.SECRET_KEY, algorithms=[config.ALGORITHM])
         username = str(payload.get("sub"))
-        return username
-        # user = get_user(fake_users_db, username)
-        # if user is None:
-        #     raise credentials_exception
-        # token_data = TokenData(username=username)
-        # return token_data
+        userid = str(payload.get("userid"))
+        return {"username": username, "userid": userid}
     except JWTError:
         raise credentials_exception

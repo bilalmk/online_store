@@ -14,6 +14,7 @@ class BaseUser(SQLModel):
     guid: Optional[str] = Field(
         default_factory=lambda: str(uuid.uuid4()), max_length=40
     )
+    status: Optional[int] = Field(default=1, gt=0, lt=100)
 
 
 class User(BaseUser, table=True):

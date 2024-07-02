@@ -48,6 +48,16 @@ class User_Crud:
             return user
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
+        
+    def get_user_by_id(self, id):
+        try:
+            statement = select(User).where(User.id == id)
+            user = self.session.exec(statement).first()
+            if not user:
+                return None
+            return user
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
 
     def varify_password(self, password: str, hashed_password: str):
         if not self.pwd_context.verify(password, hashed_password):
