@@ -22,7 +22,7 @@ class User_Crud:
             result = self.session.exec(statement).first()
             if result:
                 return {"status": "exist"}
-        
+
             user.password = self.get_hash_password(user.password)
             # db_user = User(**user.dict(exclude={"password"}))
             db_user = User.model_validate(user)
@@ -38,11 +38,18 @@ class User_Crud:
             sys.stdout.flush()
             self.session.rollback()
             return {"status": "failed"}
-        
+
     def get_user(self, email):
-        statement = select(User).where(User.email == email)
-        user = self.session.exec(statement).first()
-        return user
-    
-    def varify_password(self, password: str, hashed_password: str):                                                                                                                                       
-        return self.pwd_context.verify(password, hashed_password)
+        try:
+            statement = select(User).where(User.email == email)
+            user = self.session.exec(statement).first()
+            if not user:
+                return None
+            return user
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+
+    def varify_password(self, password: str, hashed_password: str):
+        if not self.pwd_context.verify(password, hashed_password):
+            return None
+        return True
