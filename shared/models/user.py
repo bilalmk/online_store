@@ -19,7 +19,13 @@ class BaseUser(SQLModel):
 class User(BaseUser, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     password: str
+    
+class DBUser(User):
+    pass
 
+class LoginRequest(SQLModel):
+    username: str
+    password: str
 
 class CreateUser(BaseUser):
     password: str
@@ -27,7 +33,6 @@ class CreateUser(BaseUser):
 
 class PublicUser(BaseUser):
     id: int
-    #password_hash: str
 
 
 class UpdateUser(SQLModel):

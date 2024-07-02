@@ -1,24 +1,25 @@
 from typing import Annotated
 from shared.models.token import Token
-from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
+from fastapi.security import OAuth2PasswordBearer
 from datetime import datetime, timedelta, timezone
-from fastapi import FastAPI, Depends, status, HTTPException
+from fastapi import FastAPI, Depends, status, HTTPException, Form
 from app import config
 from jose import JWTError, jwt
 
 oauth2_authentication = OAuth2PasswordBearer(tokenUrl="token")
 app = FastAPI()
 @app.post("/generate_token", response_model=Token)
-def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
+def login(username: str = Form(...)):
     try:
         access_token_expires = timedelta(minutes=config.ACCESS_TOKEN_EXPIRE_MINUTES)
         access_token = create_access_token(
-            data={"sub": form_data.username}, expires_delta=access_token_expires
+            data={"sub": username}, expires_delta=access_token_expires
         )
         
         return Token(
             access_token=access_token,
-            token_type="bearer"
+            token_type="bearer",
+            user_name=username
         )
     except Exception as e:
         raise HTTPException(

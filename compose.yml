@@ -25,6 +25,7 @@ services:
       KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
 
   users:
+    container_name: users
     build:
       context: ./users
       dockerfile: Dockerfile
@@ -33,6 +34,7 @@ services:
       - ./shared:/code/shared
     depends_on:
       - broker
+      - db-service
     ports:
       - "8001:8000"
 
@@ -49,6 +51,7 @@ services:
   #     - "8002:8000"
 
   db-service:
+    container_name: db-service
     build:
       context: ./db-service
       dockerfile: Dockerfile
@@ -59,7 +62,7 @@ services:
       - mysql
       - broker
     ports:
-      - "8003:8000"
+      - "8003:8000"    
   
   kafka-ui:
     image: provectuslabs/kafka-ui
@@ -89,6 +92,7 @@ services:
       - ./mysql-init:/docker-entrypoint-initdb.d
 
   authentication:
+    container_name: authentication
     build:
       context: ./authentication
       dockerfile: Dockerfile
@@ -100,6 +104,13 @@ services:
       - broker
     ports:
       - "8004:8000"
+
+  curl-test:
+    image: curlimages/curl:latest
+    container_name: curl-test
+    depends_on:
+      - db-service
+    command: ["sh", "-c", "while true; do curl -v db-service:8000; sleep 5; done"]      
 
 networks:
   default:  

@@ -3,19 +3,16 @@ from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 from fastapi import Depends, FastAPI, HTTPException
 from app import config
-from shared.models.user import User
 from alembic.config import Config
-
 # from app.kafka_consumer import consume_events
 # from app.kafka_producer import get_kafka_producer
 from app.kafka_consumer import consume_events
 from alembic import command
 import concurrent.futures
-from app.config import sessionDep
-from app.crud.user_crud import User_Crud
+from app.routers import user_router
+
 
 alembic_cfg = Config("alembic.ini")
-
 
 async def run_alembic_upgrade():
     # Create a thread pool executor
@@ -49,24 +46,13 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
 
 app = FastAPI(lifespan=lifespan, title="Hello World db service API")
+app.include_router(user_router.router)
 
+
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
 
 @app.get("/")
 def main():
     return {"message": "Hello World from db-service"}
-
-
-def get_hero_crud(session: sessionDep) -> User_Crud:
-    return User_Crud(session)
-
-
-@app.post("/login")
-async def login(username: str, password: str, hero_crud=Depends(get_hero_crud)):
-    try:
-        user = hero_crud.get_user(username)
-        if not user:
-            return None
-        else:
-            return user
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))

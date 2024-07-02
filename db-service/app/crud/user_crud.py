@@ -1,7 +1,7 @@
 import sys
 
 from fastapi import HTTPException
-from shared.models.user import CreateUser, User, PublicUser
+from shared.models.user import CreateUser, User, PublicUser, DBUser
 from passlib.context import CryptContext
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
@@ -40,11 +40,9 @@ class User_Crud:
             return {"status": "failed"}
         
     def get_user(self, email):
-        
         statement = select(User).where(User.email == email)
         user = self.session.exec(statement).first()
-        
-        if not user:
-            raise HTTPException(status_code=404, detail="User not found")
-
-        return PublicUser.model_validate(user)
+        return user
+    
+    def varify_password(self, password: str, hashed_password: str):                                                                                                                                       
+        return self.pwd_context.verify(password, hashed_password)
