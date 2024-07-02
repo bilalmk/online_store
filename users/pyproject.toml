@@ -15,6 +15,7 @@ python-dotenv = "^1.0.1"
 aiokafka = "^0.10.0"
 kafka-python = "^2.0.2"
 aiohttp = "^3.9.5"
+requests = "^2.32.3"
 
 
 [build-system]
