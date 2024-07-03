@@ -41,7 +41,7 @@ class User_Crud:
 
     def update_user(self, user: UpdateUser, request_id: str):
         try:
-            db_user = (
+            db_user: User = (
                 self.session.query(User)
                 .filter(User.guid == request_id)
                 .filter(User.status == 1)
@@ -50,7 +50,12 @@ class User_Crud:
 
             if not db_user:
                 return {"status": "not-found"}
-
+            
+            password = user.get("password")
+            
+            if password:
+                user["password"] = self.get_hash_password(password)
+        
             db_user.sqlmodel_update(user)
             self.session.add(db_user)
             self.session.commit()
@@ -62,8 +67,10 @@ class User_Crud:
 
     def delete_hero(self, request_id: str):
         try:
-            
-            statement = select(User).where(User.guid == request_id).where(User.status == 1)
+
+            statement = (
+                select(User).where(User.guid == request_id).where(User.status == 1)
+            )
             db_user = self.session.exec(statement).first()
 
             if not db_user:

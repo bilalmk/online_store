@@ -110,8 +110,22 @@ async def update_user(
     user: UpdateUser,
     user_guid_id: str,
     producer: Annotated[AIOKafkaProducer, Depends(get_kafka_producer)],
+    current_user: Annotated[User, Depends(get_current_active_user)],
 ):
     user_data = user.model_dump(exclude_unset=True)
+    
+    if user_data.get("password") and user_guid_id != current_user.guid:
+        raise HTTPException(
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail="You can not change password of others",
+        )
+        
+    if user_data.get("status") and user_guid_id == current_user.guid:
+        raise HTTPException(
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail="You can not change your own status",
+        )
+
     message = {
         "request_id": user_guid_id,
         "operation": "update",
@@ -134,11 +148,12 @@ async def update_user(
     status_message = {"message": "Try again"}
     return status_message
 
+
 @router.delete("/delete/{user_guid_id}")
 async def delete_user(
     user_guid_id: str,
     producer: Annotated[AIOKafkaProducer, Depends(get_kafka_producer)],
-    current_user: Annotated[User, Depends(get_current_active_user)]
+    current_user: Annotated[User, Depends(get_current_active_user)],
 ):
     try:
         if user_guid_id == current_user.guid:
@@ -151,7 +166,7 @@ async def delete_user(
             "request_id": user_guid_id,
             "operation": "delete",
             "entity": "user",
-            "data": {}
+            "data": {},
         }
 
         obj = json.dumps(message).encode("utf-8")
@@ -168,8 +183,9 @@ async def delete_user(
 
         status_message = {"message": "Try again"}
         return status_message
-    
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 app.include_router(router)
