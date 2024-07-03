@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
+import sys
 from typing import Annotated, AsyncGenerator
-from fastapi import Depends, FastAPI, APIRouter
+from fastapi import Depends, FastAPI, APIRouter, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from app import config
 from shared.models.user import User, CreateUser, PublicUser, UpdateUser
@@ -130,8 +131,45 @@ async def update_user(
     if status_message:
         return status_message
 
-    status_message = {"message": "Updated"}
+    status_message = {"message": "Try again"}
     return status_message
 
+@router.delete("/delete/{user_guid_id}")
+async def delete_user(
+    user_guid_id: str,
+    producer: Annotated[AIOKafkaProducer, Depends(get_kafka_producer)],
+    current_user: Annotated[User, Depends(get_current_active_user)]
+):
+    try:
+        if user_guid_id == current_user.guid:
+            raise HTTPException(
+                status_code=status.HTTP_406_NOT_ACCEPTABLE,
+                detail="You can not delete yourself",
+            )
+
+        message = {
+            "request_id": user_guid_id,
+            "operation": "delete",
+            "entity": "user",
+            "data": {}
+        }
+
+        obj = json.dumps(message).encode("utf-8")
+        await producer.send(config.KAFKA_USER_TOPIC, value=obj)
+
+        consumer = await get_kafka_consumer()
+        try:
+            status_message = await consume_response_from_kafka(consumer, user_guid_id)
+        finally:
+            await consumer.stop()
+
+        if status_message:
+            return status_message
+
+        status_message = {"message": "Try again"}
+        return status_message
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 app.include_router(router)

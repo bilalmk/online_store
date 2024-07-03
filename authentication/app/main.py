@@ -62,6 +62,7 @@ def decode_access_token(token: str):
         payload = jwt.decode(token, config.SECRET_KEY, algorithms=[config.ALGORITHM])
         username = str(payload.get("sub"))
         userid = str(payload.get("userid"))
+        guid = str(payload.get("guid"))
 
         if username is None:
             raise credentials_exception
@@ -71,4 +72,4 @@ def decode_access_token(token: str):
     except JWTError:
         raise credentials_exception
 
-    return {"username": username, "userid": userid}
+    return {"username": username, "userid": userid, "guid": guid}

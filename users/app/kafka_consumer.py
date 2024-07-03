@@ -19,6 +19,7 @@ async def consume_response_from_kafka(consumer, request_id):
         status = response.get("status").get("status")
 
         message = "Operation failed"
+        
         if response.get("request_id") == request_id:
             if status == "success":
                 message = "User created successfully"
@@ -34,6 +35,10 @@ async def consume_response_from_kafka(consumer, request_id):
                 message = "User update successfully"
             elif status == "failed-update":
                 message = "Failed to update user"
+            elif status == "success-delete":
+                message = "User deleted successfully"
+            elif status == "failed-delete":
+                message = "Failed to delete user"
 
             return {"message": message}
         # raise HTTPException(status_code=500, detail="No response from db-service")

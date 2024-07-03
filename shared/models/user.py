@@ -40,10 +40,10 @@ class UpdateUser(SQLModel):
     __tablename__ = "users"  # type: ignore
     username: Optional[str] = None
     password: Optional[str] = None
-    email: Optional[str] = None
+    # email: Optional[str] = None
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     address: Optional[str] = None
     phone_number: Optional[str] = None
-    guid: Optional[str] = None
+    # guid: Optional[str] = None
     status: Optional[int] = None

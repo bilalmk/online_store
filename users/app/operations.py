@@ -54,6 +54,7 @@ async def create_token(user: PublicUser):
     payload = aiohttp.FormData()
     payload.add_field("username", user.username)
     payload.add_field("id", user.id)
+    payload.add_field("guid", user.guid)
 
     async with config.client_session.post(
         f"{config.AUTH_API_BASE_PATH}/generate_token", data=payload

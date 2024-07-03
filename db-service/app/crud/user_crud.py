@@ -39,22 +39,44 @@ class User_Crud:
             self.session.rollback()
             return {"status": "failed"}
 
-    def update_hero(self, user: UpdateUser, request_id: str):
+    def update_user(self, user: UpdateUser, request_id: str):
         try:
-            db_user = self.session.query(User).filter(User.guid == request_id).first()
+            db_user = (
+                self.session.query(User)
+                .filter(User.guid == request_id)
+                .filter(User.status == 1)
+                .first()
+            )
+
             if not db_user:
                 return {"status": "not-found"}
-            
+
             db_user.sqlmodel_update(user)
             self.session.add(db_user)
             self.session.commit()
             self.session.refresh(db_user)
             return {"status": "success-update"}
         except Exception as e:
-            print(str(e))
-            sys.stdout.flush()
             self.session.rollback()
-            return {"status": "failed-update"}        
+            return {"status": "failed-update"}
+
+    def delete_hero(self, request_id: str):
+        try:
+            
+            statement = select(User).where(User.guid == request_id).where(User.status == 1)
+            db_user = self.session.exec(statement).first()
+
+            if not db_user:
+                return {"status": "not-found"}
+
+            # self.session.delete(hero)
+            db_user.status = 2
+            self.session.commit()
+            return {"status": "success-delete"}
+
+        except Exception as e:
+            self.session.rollback()
+            return {"status": "failed-delete"}
 
     def get_user(self, email):
         try:
