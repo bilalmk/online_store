@@ -17,20 +17,25 @@ async def consume_response_from_kafka(consumer, request_id):
         # count = count+1
         response = json.loads(msg.value.decode("utf-8"))
         status = response.get("status").get("status")
-        # print(response.get('request_id'))
-        # print(response.get('status').get('status'))
-        # print(request_id)
+
+        message = "Operation failed"
         if response.get("request_id") == request_id:
             if status == "success":
-                return {"message": "User created successfully"}
+                message = "User created successfully"
             elif status == "duplicate":
-                return {"message": "Record already exists."}
+                message = "Record already exists"
             elif status == "exist":
-                return {"message": "User already exists."}
+                message = "User already exists"
             elif status == "failed":
-                return {"message": "Failed to create user."}
-            else:
-                return {"message": "failed to create"}
+                message = "Failed to create user"
+            elif status == "not-found":
+                message = "User not found"
+            elif status == "success-update":
+                message = "User update successfully"
+            elif status == "failed-update":
+                message = "Failed to update user"
+
+            return {"message": message}
         # raise HTTPException(status_code=500, detail="No response from db-service")
 
 

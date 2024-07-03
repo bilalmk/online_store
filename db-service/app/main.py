@@ -53,6 +53,6 @@ app.include_router(user_router.router)
 async def health():
     return {"status": "ok"}
 
-@app.get("/")
-def main():
-    return {"message": "Hello World from db-service"}
+# @app.get("/")
+# def main():
+#     return {"message": "Hello World from db-service"}

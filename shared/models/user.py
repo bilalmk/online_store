@@ -45,3 +45,5 @@ class UpdateUser(SQLModel):
     last_name: Optional[str] = None
     address: Optional[str] = None
     phone_number: Optional[str] = None
+    guid: Optional[str] = None
+    status: Optional[int] = None

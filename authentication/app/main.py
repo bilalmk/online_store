@@ -4,7 +4,7 @@ from fastapi.security import OAuth2PasswordBearer
 from datetime import datetime, timedelta, timezone
 from fastapi import FastAPI, Depends, status, HTTPException, Form
 from app import config
-from jose import JWTError, jwt
+from jose import JWTError, jwt, ExpiredSignatureError
 
 oauth2_authentication = OAuth2PasswordBearer(tokenUrl="token")
 app = FastAPI()
@@ -51,10 +51,24 @@ def decode_access_token(token: str):
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
+
+    expired_token_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Token has expired",
+        headers={"WWW-Authenticate": "Bearer"}
+    )
+
     try:
         payload = jwt.decode(token, config.SECRET_KEY, algorithms=[config.ALGORITHM])
         username = str(payload.get("sub"))
         userid = str(payload.get("userid"))
-        return {"username": username, "userid": userid}
+
+        if username is None:
+            raise credentials_exception
+
+    except ExpiredSignatureError:
+        raise expired_token_exception
     except JWTError:
         raise credentials_exception
+
+    return {"username": username, "userid": userid}
