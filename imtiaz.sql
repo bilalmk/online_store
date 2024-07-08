@@ -1,6 +1,6 @@
 /*
 SQLyog Ultimate v8.55 
-MySQL - 8.0.30 : Database - imtiaz
+MySQL - 8.0.37 : Database - imtiaz
 *********************************************************************
 */
 
@@ -26,7 +26,12 @@ CREATE TABLE `addresses` (
   CONSTRAINT `addresses_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-/*Data for the table `addresses` */
+/*Table structure for table `alembic_version` */
+
+CREATE TABLE `alembic_version` (
+  `version_num` varchar(32) NOT NULL,
+  PRIMARY KEY (`version_num`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 /*Table structure for table `brands` */
 
@@ -37,19 +42,15 @@ CREATE TABLE `brands` (
   UNIQUE KEY `Brand_name` (`Brand_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-/*Data for the table `brands` */
-
 /*Table structure for table `categories` */
 
 CREATE TABLE `categories` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `parent_id` int DEFAULT '0',
+  `parent_id` int DEFAULT NULL,
   `category_name` varchar(50) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `category_name` (`category_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-/*Data for the table `categories` */
 
 /*Table structure for table `orderitems` */
 
@@ -59,57 +60,35 @@ CREATE TABLE `orderitems` (
   `product_id` int DEFAULT NULL,
   `quantity` int NOT NULL,
   `price` decimal(10,2) NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `order_id` (`order_id`),
-  KEY `product_id` (`product_id`),
-  CONSTRAINT `orderitems_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`),
-  CONSTRAINT `orderitems_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`)
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-/*Data for the table `orderitems` */
 
 /*Table structure for table `orders` */
 
 CREATE TABLE `orders` (
   `id` int NOT NULL AUTO_INCREMENT,
   `user_id` int DEFAULT NULL,
-  `order_date` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `total` decimal(10,2) NOT NULL,
   `status` varchar(50) NOT NULL,
-  `total_amount` decimal(10,2) NOT NULL,
-  `shipping_address` varchar(255) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `user_id` (`user_id`),
   CONSTRAINT `orders_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-/*Data for the table `orders` */
-
-/*Table structure for table `payments` */
-
-CREATE TABLE `payments` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `order_id` int DEFAULT NULL,
-  `payment_date` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `amount` decimal(10,2) NOT NULL,
-  `payment_method` varchar(50) DEFAULT NULL,
-  `status` varchar(50) NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `order_id` (`order_id`),
-  CONSTRAINT `payments_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-/*Data for the table `payments` */
-
 /*Table structure for table `products` */
 
 CREATE TABLE `products` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `product_name` varchar(100) NOT NULL,
+  `name` varchar(255) NOT NULL,
   `description` text,
   `price` decimal(10,2) NOT NULL,
   `stock_quantity` int NOT NULL,
   `category_id` int DEFAULT NULL,
+  `image_name` varchar(255) DEFAULT NULL,
   `brand_id` int DEFAULT NULL,
+  `guid` varchar(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `status` tinyint DEFAULT '1',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `category_id` (`category_id`),
@@ -117,8 +96,6 @@ CREATE TABLE `products` (
   CONSTRAINT `products_ibfk_1` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`),
   CONSTRAINT `products_ibfk_2` FOREIGN KEY (`brand_id`) REFERENCES `brands` (`Id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-/*Data for the table `products` */
 
 /*Table structure for table `shoppingcart` */
 
@@ -135,26 +112,23 @@ CREATE TABLE `shoppingcart` (
   CONSTRAINT `shoppingcart_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-/*Data for the table `shoppingcart` */
-
 /*Table structure for table `users` */
 
 CREATE TABLE `users` (
   `id` int NOT NULL AUTO_INCREMENT,
   `username` varchar(50) NOT NULL,
   `email` varchar(100) NOT NULL,
-  `password` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `password` varchar(255) NOT NULL,
   `first_name` varchar(50) DEFAULT NULL,
   `last_name` varchar(50) DEFAULT NULL,
   `address` varchar(255) DEFAULT NULL,
   `phone_number` varchar(20) DEFAULT NULL,
+  `guid` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `status` tinyint DEFAULT '1',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `username` (`username`),
   UNIQUE KEY `email` (`email`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-/*Data for the table `users` */
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
 /*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
