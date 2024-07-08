@@ -36,7 +36,7 @@ services:
       - broker
       - db-service
     ports:
-      - "8001:8000"
+      - "8011:8000"
 
   # products:
   #   build:
@@ -48,7 +48,7 @@ services:
   #   depends_on:
   #     - broker
   #   ports:
-  #     - "8002:8000"
+  #     - "8012:8000"
 
   db-service:
     container_name: db-service
@@ -62,7 +62,7 @@ services:
       - mysql
       - broker
     ports:
-      - "8003:8000"    
+      - "8013:8000"    
   
   kafka-ui:
     image: provectuslabs/kafka-ui
@@ -103,7 +103,7 @@ services:
       - mysql
       - broker
     ports:
-      - "8004:8000"
+      - "8014:8000"
 
   curl-test:
     image: curlimages/curl:latest
