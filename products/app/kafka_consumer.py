@@ -1,47 +1,46 @@
+import json
 from aiokafka import AIOKafkaConsumer  # type: ignore
 from app import config
-import os
-from datetime import datetime
+
+responses = {}
 
 
-async def consume_events(topic, bootstrap_servers):
-    # Create a consumer instance.
+async def consume_response_from_kafka(consumer, request_id):
+    async for msg in consumer:
+        response = json.loads(msg.value.decode("utf-8"))
+        status = response.get("status").get("status")
+
+        message = "Operation failed"
+
+        if response.get("request_id") == request_id:
+            if status == "success":
+                message = "Product created successfully"
+            elif status == "duplicate":
+                message = "Product already exists"
+            elif status == "exist":
+                message = "Product already exists"
+            elif status == "failed":
+                message = "Failed to create product"
+            elif status == "not-found":
+                message = "Product not found"
+            elif status == "success-update":
+                message = "Product update successfully"
+            elif status == "failed-update":
+                message = "Failed to update product"
+            elif status == "success-delete":
+                message = "Product deleted successfully"
+            elif status == "failed-delete":
+                message = "Failed to delete product"
+
+            return {"message": message}
+
+
+async def get_kafka_consumer():
     consumer = AIOKafkaConsumer(
-        topic,
-        bootstrap_servers=config.BOOTSTRAP_SERVER,
-        group_id=config.KAFKA_CONSUMER_GROUP_ID,
+        config.KAFKA_PRODUCTS_DB_RESPONSE,
+        bootstrap_servers=str(config.BOOTSTRAP_SERVER),
+        group_id=config.KAFKA_PRODUCT_CONSUMER_GROUP_ID,
         auto_offset_reset="earliest",
     )
-
-    # Start the consumer.
     await consumer.start()
-    try:
-        filename = "example.txt"
-        # Continuously listen for messages.
-        async for message in consumer:
-            print(
-                f"Received message: {message.value.decode()} on topic {message.topic}"
-            )
-            
-            content = (
-                f"{datetime.now().time()}  - Received message: {message.value.decode()} on topic {message.topic}"
-            )
-
-            write_to_file(filename, content)
-            # Here you can add code to process each message.
-            # Example: parse the message, store it in a database, etc.
-    finally:
-        # Ensure to close the consumer when done.
-        await consumer.stop()
-
-
-def write_to_file(filename, content):
-    # Check if the file exists
-    if os.path.exists(filename):
-        # Open the file in append mode
-        with open(filename, "a") as file:
-            file.write(content + "\n")
-    else:
-        # Create a new file and write to it
-        with open(filename, "w") as file:
-            file.write(content + "\n")
+    return consumer

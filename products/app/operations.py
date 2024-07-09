@@ -13,7 +13,7 @@ oauth2_authentication = OAuth2PasswordBearer(tokenUrl="token")
 async def get_token_data(token: str):
     payload = aiohttp.FormData()
     payload.add_field("token", token)
-    async with config.client_session.post(
+    async with config.client_session.post(  # type: ignore
         f"{config.AUTH_API_BASE_PATH}/get_token_data", data=payload
     ) as response:
         if response.status != 200:

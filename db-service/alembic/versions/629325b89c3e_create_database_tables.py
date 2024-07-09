@@ -8,7 +8,7 @@ Create Date: 2024-06-27 20:35:24.801393
 
 from typing import Sequence, Union
 from sqlalchemy.dialects.mysql import DECIMAL, TINYINT
-from alembic import op
+from alembic import op  # type: ignore
 import sqlalchemy as sa
 
 
@@ -103,18 +103,19 @@ def upgrade() -> None:
         sa.Column(
             "id", sa.Integer, primary_key=True, nullable=False, autoincrement=True
         ),
-        sa.Column("name", sa.String(255), nullable=False),
+        sa.Column("name", sa.String(2000), nullable=False),
         sa.Column("description", sa.Text),
         sa.Column("price", sa.Numeric(10, 2), nullable=False),
         sa.Column("stock_quantity", sa.Integer, nullable=False),
-        sa.Column("category_id", sa.Integer, sa.ForeignKey("categories.id")),
-        sa.Column("brand_id", sa.Integer, sa.ForeignKey("brands.Id")),
-        sa.Column("image_name", sa.String(255), nullable=True),
+        sa.Column("category_id", sa.Integer, nullable=False),
+        sa.Column("brand_id", sa.Integer, nullable=False),
+        sa.Column("image_name", sa.String(1000), nullable=True),
         sa.Column("guid", sa.CHAR(36), nullable=False),
         sa.Column("status", TINYINT(4), nullable=False, server_default="1"),
         sa.Column(
             "created_at", sa.TIMESTAMP, server_default=sa.func.current_timestamp()
         ),
+        sa.Column("created_by", sa.Integer, nullable=False),
     )
 
     # Creating table `shoppingcart`

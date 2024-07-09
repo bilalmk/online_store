@@ -38,17 +38,19 @@ services:
     ports:
       - "8011:8000"
 
-  # products:
-  #   build:
-  #     context: ./products
-  #     dockerfile: Dockerfile
-  #   volumes:
-  #     - ./products:/code
-  #     - shared-data:/code/shared
-  #   depends_on:
-  #     - broker
-  #   ports:
-  #     - "8012:8000"
+  products:
+    container_name: products
+    build:
+      context: ./products
+      dockerfile: Dockerfile
+    volumes:
+      - ./products:/code
+      - ./shared:/code/shared
+    depends_on:
+      - broker
+      - db-service
+    ports:
+      - "8012:8000"
 
   db-service:
     container_name: db-service
