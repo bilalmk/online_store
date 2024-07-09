@@ -36,6 +36,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
             config.KAFKA_PRODUCT_TOPIC, config.KAFKA_PRODUCT_CONSUMER_GROUP_ID
         )
     )
+    
     asyncio.create_task(run_alembic_upgrade())
 
     # asyncio.create_task(
@@ -51,6 +52,11 @@ app.include_router(user_router.router)
 
 @app.get("/health")
 async def health():
+    return {"status": "ok"}
+
+@app.get("/dbup")
+async def dbup():
+    await run_alembic_upgrade()
     return {"status": "ok"}
 
 # @app.get("/")

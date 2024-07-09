@@ -3,15 +3,18 @@ from decimal import Decimal
 from typing import Optional
 import uuid
 from sqlmodel import SQLModel, Field, Column, String
-from sqlalchemy import DECIMAL
+from sqlalchemy import DECIMAL, Float
 
 class BaseProduct(SQLModel):
     __tablename__ = "products"  # type: ignore
     name: str = Field(..., min_length=3, max_length=2000)
     description: Optional[str] = None
-    price: Decimal = Field(
-        sa_column=Column(DECIMAL(precision=10, scale=2), nullable=False)
+    price: float = Field(
+        sa_column=Column(Float, nullable=False)
     )
+    # price: DECIMAL = Field(
+    #     sa_column=Column(DECIMAL(precision=10, scale=2), nullable=False)
+    # )
     stock_quantity: int = Field(..., gt=0)
     category_id: int = Field(..., gt=0)
     brand_id: int = Field(..., gt=0)
