@@ -2,19 +2,16 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Optional
 import uuid
+from fastapi import File, UploadFile
 from sqlmodel import SQLModel, Field, Column, String
 from sqlalchemy import DECIMAL, Float
+
 
 class BaseProduct(SQLModel):
     __tablename__ = "products"  # type: ignore
     name: str = Field(..., min_length=3, max_length=2000)
     description: Optional[str] = None
-    price: float = Field(
-        sa_column=Column(Float, nullable=False)
-    )
-    # price: DECIMAL = Field(
-    #     sa_column=Column(DECIMAL(precision=10, scale=2), nullable=False)
-    # )
+    price: float = Field(sa_column=Column(Float, nullable=False))
     stock_quantity: int = Field(..., gt=0)
     category_id: int = Field(..., gt=0)
     brand_id: int = Field(..., gt=0)
@@ -25,6 +22,13 @@ class BaseProduct(SQLModel):
     created_by: int = Field(..., gt=0)
     created_at: datetime = Field(default=datetime.utcnow())
     status: int = Field(default=1, gt=0, lt=100)
+
+    # created_at: Optional[datetime] = Field(default_factory=datetime.utcnow, sa_column_kwargs={"server_default": "CURRENT_TIMESTAMP"})
+    # price: DECIMAL = Field(
+    #     sa_column=Column(DECIMAL(precision=10, scale=2), nullable=False)
+    # )
+
+    # price: Decimal = Field(sa_column_kwargs={"nullable": False, "scale": 2, "precision": 10})
 
 
 class Product(BaseProduct, table=True):

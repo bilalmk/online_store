@@ -46,6 +46,7 @@ services:
     volumes:
       - ./products:/code
       - ./shared:/code/shared
+      - product_images:/code/upload_images
     depends_on:
       - broker
       - db-service
@@ -119,6 +120,7 @@ networks:
     driver: bridge
 
 volumes:
+  product_images:
   mysql-data:
     driver: local
 

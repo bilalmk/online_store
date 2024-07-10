@@ -4,6 +4,7 @@ from aiokafka import AIOKafkaConsumer  # type: ignore
 from app import config
 import os
 from datetime import datetime
+from app.operation.product_operation import ProductOperation
 from app.operation.user_operation import UserOperation
 
 
@@ -27,7 +28,8 @@ async def consume_events(topic, group_id):
                 t = UserOperation(data)
                 await t.operations()
             if message.topic == "products":
-                pass
+                t = ProductOperation(data)
+                await t.operations()
 
             #log_message(data.get("data"), message.topic)
 

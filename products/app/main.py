@@ -4,7 +4,7 @@ import json
 from contextlib import asynccontextmanager
 from typing import Annotated, AsyncGenerator
 from aiohttp import ClientSession, TCPConnector
-from fastapi import APIRouter, FastAPI, Depends
+from fastapi import APIRouter, FastAPI, Depends, File, Form, UploadFile
 from aiokafka import AIOKafkaProducer  # type: ignore
 from app.kafka_producer import get_kafka_producer
 from app.kafka_consumer import (
@@ -52,17 +52,39 @@ class CustomJSONEncoder(json.JSONEncoder):
 
 @router.post("/create")
 async def create(
-    product: CreateProduct,
     producer: Annotated[AIOKafkaProducer, Depends(get_kafka_producer)],
     token: Annotated[TokenData, Depends(get_token)],
+    name: str = Form(...),
+    price: float = Form(...),
+    stock_quantity: int = Form(...),
+    category_id: int = Form(...),
+    brand_id: int = Form(...),
+    created_by: int = Form(...),
+    status: int = Form(...),
+    file: UploadFile = File(None)
 ):
-    product.created_by = token.userid
+    product = CreateProduct(
+        name=name,
+        price=price,
+        stock_quantity=stock_quantity,
+        category_id=category_id,
+        brand_id=brand_id,
+        created_by=token.userid,
+        status=status
+    )
+    
+    if file:
+        product.image_name = f"{product.guid}_{file.filename}"
+        
+    product_dict = product.dict()
+
     message = {
         "request_id": product.guid,
         "operation": "create",
         "entity": "product",
-        "data": product.dict(),
+        "data": product_dict,
     }
+
     try:
         obj = json.dumps(message, cls=CustomJSONEncoder).encode("utf-8")
         await producer.send(config.KAFKA_PRODUCT_TOPIC, value=obj)
@@ -77,10 +99,19 @@ async def create(
         await consumer.stop()
 
     if status_message:
+        if file:
+            await save_file(file, product.guid)
         return status_message
 
     status_message = {"message": "Created"}
     return status_message
+
+
+async def save_file(file: UploadFile, product_guid: str | None):
+    file_location = f"./upload_images/{product_guid}_{file.filename}"
+    with open(file_location, "wb") as f:
+        f.write(await file.read())
+    return {"file_path": file_location}
 
 
 app.include_router(router)
