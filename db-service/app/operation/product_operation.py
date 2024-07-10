@@ -36,7 +36,7 @@ class ProductOperation:
             elif self.operation == "delete":
                 
                 product_crud = Product_Crud(session)
-                status = product_crud.delete_hero(self.request_id)
+                status = product_crud.delete_product(self.request_id)
                 response = {"request_id": self.request_id, "status": status}
                 obj = json.dumps(response).encode("utf-8")
                 await send_producer(config.KAFKA_PRODUCTS_DB_RESPONSE, obj)

@@ -57,7 +57,7 @@ class Product_Crud:
         try:
 
             statement = (
-                select(Product).where(Product.id == request_id).where(Product.status == 1)
+                select(Product).where(Product.guid == request_id).where(Product.status == 1)
             )
             db_product = self.session.exec(statement).first()
 

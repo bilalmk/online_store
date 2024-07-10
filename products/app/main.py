@@ -4,7 +4,7 @@ import json
 from contextlib import asynccontextmanager
 from typing import Annotated, AsyncGenerator
 from aiohttp import ClientSession, TCPConnector
-from fastapi import APIRouter, FastAPI, Depends, File, Form, UploadFile
+from fastapi import APIRouter, FastAPI, Depends, File, Form, HTTPException, UploadFile
 from aiokafka import AIOKafkaProducer  # type: ignore
 from app.kafka_producer import get_kafka_producer
 from app.kafka_consumer import (
@@ -14,7 +14,7 @@ from app.kafka_consumer import (
 
 from app import config
 from app.operations import get_token
-from shared.models.product import CreateProduct
+from shared.models.product import CreateProduct, Product, UpdateProduct
 from shared.models.token import Token, TokenData
 
 
@@ -105,6 +105,71 @@ async def create(
 
     status_message = {"message": "Created"}
     return status_message
+
+
+@router.patch("/update/{product_guid_id}")
+async def update_product(
+    product: UpdateProduct,
+    product_guid_id: str,
+    producer: Annotated[AIOKafkaProducer, Depends(get_kafka_producer)],
+    token: Annotated[TokenData, Depends(get_token)],
+):
+    product_data = product.model_dump(exclude_unset=True)
+    
+    message = {
+        "request_id": product_guid_id,
+        "operation": "update",
+        "entity": "product",
+        "data": product_data,
+    }
+
+    obj = json.dumps(message).encode("utf-8")
+    await producer.send(config.KAFKA_PRODUCT_TOPIC, value=obj)
+
+    consumer = await get_kafka_consumer()
+    try:
+        status_message = await consume_response_from_kafka(consumer, product_guid_id)
+    finally:
+        await consumer.stop()
+
+    if status_message:
+        return status_message
+
+    status_message = {"message": "Try again"}
+    return status_message
+
+
+@router.delete("/delete/{product_guid_id}")
+async def delete_product(
+    product_guid_id: str,
+    producer: Annotated[AIOKafkaProducer, Depends(get_kafka_producer)],
+    token: Annotated[TokenData, Depends(get_token)],
+):
+    try:
+        message = {
+            "request_id": product_guid_id,
+            "operation": "delete",
+            "entity": "product",
+            "data": {},
+        }
+
+        obj = json.dumps(message).encode("utf-8")
+        await producer.send(config.KAFKA_PRODUCT_TOPIC, value=obj)
+
+        consumer = await get_kafka_consumer()
+        try:
+            status_message = await consume_response_from_kafka(consumer, product_guid_id)
+        finally:
+            await consumer.stop()
+
+        if status_message:
+            return status_message
+
+        status_message = {"message": "Try again"}
+        return status_message
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 async def save_file(file: UploadFile, product_guid: str | None):
