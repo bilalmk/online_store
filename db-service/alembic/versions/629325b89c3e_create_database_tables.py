@@ -56,9 +56,16 @@ def upgrade() -> None:
     op.create_table(
         "brands",
         sa.Column(
-            "Id", sa.Integer, primary_key=True, nullable=False, autoincrement=True
+            "id", sa.Integer, primary_key=True, nullable=False, autoincrement=True
         ),
-        sa.Column("Brand_name", sa.String(255), nullable=False, unique=True),
+        sa.Column("brand_name", sa.String(255), nullable=False, unique=True),
+        sa.Column("brand_slug", sa.String(255), nullable=False, unique=True),
+        sa.Column("guid", sa.CHAR(36), nullable=False),
+        sa.Column("created_by", sa.Integer, nullable=False),
+        sa.Column(
+            "created_at", sa.TIMESTAMP, server_default=sa.func.current_timestamp()
+        ),
+        sa.Column("status", TINYINT(4), nullable=False, server_default="1")
     )
 
     # Creating table `categories`
@@ -68,7 +75,14 @@ def upgrade() -> None:
             "id", sa.Integer, primary_key=True, nullable=False, autoincrement=True
         ),
         sa.Column("parent_id", sa.Integer, default=0),
-        sa.Column("category_name", sa.String(50), nullable=False, unique=True),
+        sa.Column("category_name", sa.String(255), nullable=False, unique=True),
+        sa.Column("category_slug", sa.String(255), nullable=False, unique=True),
+        sa.Column("guid", sa.CHAR(36), nullable=False),
+        sa.Column("created_by", sa.Integer, nullable=False),
+        sa.Column(
+            "created_at", sa.TIMESTAMP, server_default=sa.func.current_timestamp()
+        ),
+        sa.Column("status", TINYINT(4), nullable=False, server_default="1")
     )
 
     # Creating table `orderitems`

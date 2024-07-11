@@ -6,6 +6,8 @@ import os
 from datetime import datetime
 from app.operation.product_operation import ProductOperation
 from app.operation.user_operation import UserOperation
+from app.operation.category_operation import CategoryOperation
+from app.operation.brand_operation import BrandOperation
 
 
 async def consume_events(topic, group_id):
@@ -30,6 +32,12 @@ async def consume_events(topic, group_id):
             if message.topic == "products":
                 t = ProductOperation(data)
                 await t.operations()
+            if message.topic == "category":
+                t = CategoryOperation(data)
+                await t.operations()
+            if message.topic == "brands":
+                t = BrandOperation(data)
+                await t.operations()                
 
             #log_message(data.get("data"), message.topic)
 

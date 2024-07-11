@@ -65,7 +65,49 @@ services:
       - mysql
       - broker
     ports:
-      - "8013:8000"    
+      - "8013:8000"
+
+  authentication:
+      container_name: authentication
+      build:
+        context: ./authentication
+        dockerfile: Dockerfile
+      volumes:
+        - ./authentication:/code
+        - ./shared:/code/shared
+      depends_on:
+        - mysql
+        - broker
+      ports:
+        - "8014:8000"
+
+  category:
+    container_name: category
+    build:
+      context: ./category
+      dockerfile: Dockerfile
+    volumes:
+      - ./category:/code
+      - ./shared:/code/shared
+    depends_on:
+      - broker
+      - db-service
+    ports:
+      - "8015:8000"
+
+  brand:
+    container_name: brand
+    build:
+      context: ./brand
+      dockerfile: Dockerfile
+    volumes:
+      - ./brand:/code
+      - ./shared:/code/shared
+    depends_on:
+      - broker
+      - db-service
+    ports:
+      - "8016:8000"
   
   kafka-ui:
     image: provectuslabs/kafka-ui
@@ -94,19 +136,7 @@ services:
       - mysql-data:/var/lib/mysql
       - ./mysql-init:/docker-entrypoint-initdb.d
 
-  authentication:
-    container_name: authentication
-    build:
-      context: ./authentication
-      dockerfile: Dockerfile
-    volumes:
-      - ./authentication:/code
-      - ./shared:/code/shared
-    depends_on:
-      - mysql
-      - broker
-    ports:
-      - "8014:8000"
+  
 
   curl-test:
     image: curlimages/curl:latest
