@@ -180,6 +180,10 @@ async def get_products():
 @router.get("/product/{product_id}", response_model=PublicProduct)
 async def read_product_by_id(product_id:int):
     product = await get_product(product_id)
+    product_dict = PublicProduct(**product)
+    print(product_dict.category_id)
+    # categories = await get_categories(product.category_id)
+    # brands = await get_brands()
     return product
 
 async def save_file(file: UploadFile, product_guid: str | None):
