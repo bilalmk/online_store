@@ -13,8 +13,8 @@ from app.kafka_consumer import (
 )
 
 from app import config
-from app.operations import get_token
-from shared.models.product import CreateProduct, Product, UpdateProduct
+from app.operations import get_token, get_product_list, get_product
+from shared.models.product import CreateProduct, Product, PublicProduct, UpdateProduct
 from shared.models.token import Token, TokenData
 
 
@@ -171,6 +171,16 @@ async def delete_product(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
+@router.get("/", response_model=list[PublicProduct])
+async def get_products():
+    list = await get_product_list()
+    return list
+
+@router.get("/product/{product_id}", response_model=PublicProduct)
+async def read_product_by_id(product_id:int):
+    product = await get_product(product_id)
+    return product
 
 async def save_file(file: UploadFile, product_guid: str | None):
     file_location = f"./upload_images/{product_guid}_{file.filename}"

@@ -9,7 +9,7 @@ from alembic.config import Config
 from app.kafka_consumer import consume_events
 from alembic import command
 import concurrent.futures
-from app.routers import user_router
+from app.routers import user_router,product_router
 
 
 alembic_cfg = Config("alembic.ini")
@@ -48,6 +48,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
 app = FastAPI(lifespan=lifespan, title="Hello World db service API")
 app.include_router(user_router.router)
+app.include_router(product_router.router)
 
 
 @app.get("/health")
