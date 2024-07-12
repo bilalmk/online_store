@@ -101,11 +101,11 @@ def upgrade() -> None:
     op.create_table(
         "orders",
         sa.Column(
-            "id", sa.Integer, primary_key=True, nullable=False, autoincrement=True
+            "order_id", sa.Integer, primary_key=True, nullable=False, autoincrement=True
         ),
-        sa.Column("user_id", sa.Integer, sa.ForeignKey("users.id")),
-        sa.Column("total", sa.Numeric(10, 2), nullable=False),
-        sa.Column("status", sa.String(50), nullable=False),
+        sa.Column("customer_id", sa.Integer),
+        sa.Column("total_amount", sa.Numeric(10, 2), nullable=False),
+        sa.Column("status", TINYINT(4), nullable=False, server_default="1"),
         sa.Column(
             "created_at", sa.TIMESTAMP, server_default=sa.func.current_timestamp()
         ),

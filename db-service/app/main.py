@@ -63,8 +63,11 @@ async def health():
 
 @app.get("/dbup")
 async def dbup():
-    await run_alembic_upgrade()
-    return {"status": "ok"}
+    try:
+        await run_alembic_upgrade()
+        return {"status": "ok"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 # @app.get("/")
 # def main():

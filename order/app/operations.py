@@ -42,18 +42,18 @@ async def get_token(token: Annotated[str, Depends(oauth2_authentication)]):
 
     return token_data
 
-async def get_product_list():
-    db_service_url = f"{config.DB_API_BASE_PATH}/products/"
+async def get_order_list():
+    db_service_url = f"{config.DB_API_BASE_PATH}/orders/"
     async with config.client_session.get(db_service_url) as response:
         data = await response.json()
         if response.status != 200:
             raise HTTPException(status_code=response.status, detail=data["detail"])
         return data
     
-async def get_product(product_id:int):
+async def get_order(order_id:int):
     payload = aiohttp.FormData()
-    payload.add_field("product_id", product_id)
-    db_service_url = f"{config.DB_API_BASE_PATH}/products/product"
+    payload.add_field("order_id", order_id)
+    db_service_url = f"{config.DB_API_BASE_PATH}/orders/order"
     async with config.client_session.post(db_service_url,data=payload) as response:
         if response.status != 200:
             res = await response.json()

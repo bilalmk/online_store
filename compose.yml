@@ -108,6 +108,20 @@ services:
       - db-service
     ports:
       - "8016:8000"
+
+  order:
+    container_name: order
+    build:
+      context: ./order
+      dockerfile: Dockerfile
+    volumes:
+      - ./order:/code
+      - ./shared:/code/shared
+    depends_on:
+      - broker
+      - db-service
+    ports:
+      - "8017:8000"      
   
   kafka-ui:
     image: provectuslabs/kafka-ui
