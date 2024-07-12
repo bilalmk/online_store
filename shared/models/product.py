@@ -45,6 +45,8 @@ class CreateProduct(BaseProduct):
 
 class PublicProduct(BaseProduct):
     id: int
+    category_name: Optional[str] = None
+    brand_name: Optional[str] = None
 
 
 class UpdateProduct(SQLModel):

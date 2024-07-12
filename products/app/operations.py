@@ -61,4 +61,41 @@ async def get_product(product_id:int):
             raise HTTPException(status_code=response.status, detail=res["detail"])
         data = await response.json()
         return data
-        
+    
+async def get_categories(category_id:int):
+    payload = aiohttp.FormData()
+    payload.add_field("category_id",category_id)
+    db_service_url = f"{config.DB_API_BASE_PATH}/categories/category"
+    async with config.client_session.post(db_service_url,data=payload) as response:
+        if response.status != 200:
+            return None
+        data = await response.json()
+        return data
+    
+async def get_category_list():
+    db_service_url = f"{config.DB_API_BASE_PATH}/categories/"
+    async with config.client_session.get(db_service_url) as response:
+        data = await response.json()
+        if response.status != 200:
+            return None
+        return data
+
+    
+async def get_brands(brand_id:int):
+    payload = aiohttp.FormData()
+    payload.add_field("brand_id",brand_id)
+    db_service_url = f"{config.DB_API_BASE_PATH}/brands/brand"
+    async with config.client_session.post(db_service_url,data=payload) as response:
+        if response.status != 200:
+            return None
+        data = await response.json()
+        return data
+    
+async def get_brand_list():
+    db_service_url = f"{config.DB_API_BASE_PATH}/brands/"
+    async with config.client_session.get(db_service_url) as response:
+        data = await response.json()
+        if response.status != 200:
+            return None
+        return data
+    
