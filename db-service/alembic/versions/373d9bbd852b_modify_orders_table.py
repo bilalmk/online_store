@@ -43,7 +43,6 @@ def upgrade() -> None:
         sa.Column('create_date', sa.TIMESTAMP, server_default=sa.func.current_timestamp()),
         sa.Column('update_date', sa.TIMESTAMP, server_default=sa.func.current_timestamp(), onupdate=sa.func.current_timestamp())
     )
-    op.drop_table("orderitems")
 
 
 def downgrade() -> None:

@@ -86,16 +86,16 @@ def upgrade() -> None:
     )
 
     # Creating table `orderitems`
-    op.create_table(
-        "orderitems",
-        sa.Column(
-            "id", sa.Integer, primary_key=True, nullable=False, autoincrement=True
-        ),
-        sa.Column("order_id", sa.Integer),
-        sa.Column("product_id", sa.Integer),
-        sa.Column("quantity", sa.Integer, nullable=False),
-        sa.Column("price", sa.Numeric(10, 2), nullable=False),
-    )
+    # op.create_table(
+    #     "orderitems",
+    #     sa.Column(
+    #         "id", sa.Integer, primary_key=True, nullable=False, autoincrement=True
+    #     ),
+    #     sa.Column("order_id", sa.Integer),
+    #     sa.Column("product_id", sa.Integer),
+    #     sa.Column("quantity", sa.Integer, nullable=False),
+    #     sa.Column("price", sa.Numeric(10, 2), nullable=False),
+    # )
 
     # Creating table `orders`
     op.create_table(
@@ -151,7 +151,6 @@ def downgrade() -> None:
     op.drop_table("shoppingcart")
     op.drop_table("products")
     op.drop_table("orders")
-    op.drop_table("orderitems")
     op.drop_table("categories")
     op.drop_table("brands")
     op.drop_table("addresses")
