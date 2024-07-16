@@ -9,7 +9,7 @@ from alembic.config import Config
 from app.kafka_consumer import consume_events
 from alembic import command
 import concurrent.futures
-from app.routers import user_router,product_router,category_router,brand_router
+from app.routers import user_router,product_router,category_router,brand_router,order_router
 
 
 alembic_cfg = Config("alembic.ini")
@@ -40,6 +40,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     asyncio.create_task(
         consume_events(config.KAFKA_BRAND_TOPIC, config.KAFKA_BRAND_CONSUMER_GROUP_ID)
     )
+    asyncio.create_task(
+        consume_events(config.KAFKA_ORDER_WITH_DETAIL_TOPIC, config.KAFKA_ORDER_CONSUMER_GROUP_ID)
+    )
     
     asyncio.create_task(run_alembic_upgrade())
 
@@ -55,6 +58,7 @@ app.include_router(user_router.router)
 app.include_router(product_router.router)
 app.include_router(category_router.router)
 app.include_router(brand_router.router)
+app.include_router(order_router.router)
 
 
 @app.get("/health")

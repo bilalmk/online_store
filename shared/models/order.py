@@ -1,18 +1,21 @@
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional
+from typing import List, Optional
 import uuid
 from fastapi import File
-from sqlmodel import SQLModel, Field, Column, String
-from sqlalchemy import DECIMAL, Float
+from sqlmodel import Relationship, SQLModel, Field, Column, String
+from sqlalchemy import DECIMAL, Float, Numeric
+from shared.models.order_detail import CreateOrderDetail
 
 
 class BaseOrder(SQLModel):
     __tablename__ = "orders"  # type: ignore
     customer_id: int = Field(..., gt=0)
-    total_amount: Decimal = Field(
-        sa_column=Column(DECIMAL(precision=10, scale=2), nullable=False)
-    )
+    total_amount: float = Field(...)
+    #total_amount: float = Field(..., sa_column=Column(Numeric(10, 2)))
+    # total_amount: Decimal = Field(
+    #     sa_column=Column(DECIMAL(precision=10, scale=2), nullable=False)
+    # )
     order_date: datetime = Field(default=datetime.utcnow())
     shipping_address: str = Field(..., min_length=3, max_length=2000)
     billing_address: str = Field(..., min_length=3, max_length=2000)
@@ -28,35 +31,19 @@ class BaseOrder(SQLModel):
     guid: Optional[str] = Field(
         default_factory=lambda: str(uuid.uuid4()), max_length=40
     )
-    created_by: int = Field(..., gt=0)
+    #created_by: int = Field(..., gt=0)
     created_at: datetime = Field(default=datetime.utcnow())
     status: int = Field(default=1, gt=0, lt=100)
+    
 
 class Order(BaseOrder, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
+    order_id: Optional[int] = Field(default=None, primary_key=True)
 
-
-class DBOrder(Order):
+class DBOrder(BaseOrder):
     pass
-
 
 class CreateOrder(BaseOrder):
-    pass
-
+    order_details: Optional[List["CreateOrderDetail"]]
 
 class PublicOrder(BaseOrder):
     id: int
-    category_name: Optional[str] = None
-    brand_name: Optional[str] = None
-
-
-class UpdateOrder(SQLModel):
-    __tablename__ = "orders"  # type: ignore
-    name: Optional[str] = None
-    description: Optional[str] = None
-    price: Optional[Decimal] = None
-    stock_quantity: Optional[int] = None
-    category_id: Optional[int] = None
-    brand_id: Optional[int] = None
-    image_name: Optional[str] = None
-    status: Optional[int] = None

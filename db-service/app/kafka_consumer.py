@@ -8,6 +8,7 @@ from app.operation.product_operation import ProductOperation
 from app.operation.user_operation import UserOperation
 from app.operation.category_operation import CategoryOperation
 from app.operation.brand_operation import BrandOperation
+from app.operation.order_operation import OrderOperation
 
 
 async def consume_events(topic, group_id):
@@ -37,7 +38,10 @@ async def consume_events(topic, group_id):
                 await t.operations()
             if message.topic == "brands":
                 t = BrandOperation(data)
-                await t.operations()                
+                await t.operations()
+            if message.topic == "order_with_detail":
+                t = OrderOperation(data)
+                await t.operations()
 
             #log_message(data.get("data"), message.topic)
 
