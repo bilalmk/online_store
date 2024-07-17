@@ -8,22 +8,31 @@ from fastapi import APIRouter, FastAPI, Depends, File, Form, HTTPException, Uplo
 from aiokafka import AIOKafkaProducer  # type: ignore
 from app.kafka_producer import get_kafka_producer
 from app.kafka_consumer import (
+    consume_events,
     get_kafka_consumer,
     consume_response_from_kafka,
 )
 
 from app import config
-from app.operations import get_token, get_product_list, get_product, get_categories, get_brands, get_category_list, get_brand_list
-from shared.models.brand import PublicBrand
-from shared.models.category import PublicCategory
-from shared.models.product import CreateProduct, Product, PublicProduct, UpdateProduct
+from app.operations import get_token
+# from shared.models.brand import PublicBrand
+# from shared.models.category import PublicCategory
+# from shared.models.product import CreateProduct, Product, PublicProduct, UpdateProduct
+from shared.models.payment import PaymentFailure, PaymentInfo, PaymentSuccessStatus
 from shared.models.token import Token, TokenData
+import asyncio
+from authorizenet import apicontractsv1
+from authorizenet.apicontrollers import createTransactionController
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     print("starting lifespan process")
     config.client_session = ClientSession(connector=TCPConnector(limit=100))
+    await asyncio.sleep(10)
+    asyncio.create_task(
+        consume_events(config.KAFKA_ORDER_TOPIC, config.KAFKA_ORDER_CONSUMER_GROUP_ID)
+    )
     yield
     await config.client_session.close()
 
@@ -31,8 +40,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 app = FastAPI(lifespan=lifespan, title="Hello World API with DB")
 
 router = APIRouter(
-    prefix="/products",
-    tags=["products"],
+    prefix="/payments",
+    tags=["payments"],
     dependencies=[Depends(get_token)],
     responses={404: {"description": "Not found"}},
 )
@@ -40,7 +49,7 @@ router = APIRouter(
 
 @app.get("/")
 def main():
-    return {"message": "Hello World from products"}
+    return {"message": "Hello World from paymentss"}
 
 
 class CustomJSONEncoder(json.JSONEncoder):
@@ -50,166 +59,196 @@ class CustomJSONEncoder(json.JSONEncoder):
         elif isinstance(obj, datetime):
             return obj.isoformat()
         return super(CustomJSONEncoder, self).default(obj)
+    
+@router.post("/pay")
+async def process_payment(
+    payment_info: PaymentInfo,
+    producer: Annotated[AIOKafkaProducer, Depends(get_kafka_producer)],
+    token: Annotated[TokenData, Depends(get_token)]
+):
+    
+    # get order info
+    # get customer info
+    
+    # Create a merchantAuthenticationType object with authentication details
+    merchantAuth = apicontractsv1.merchantAuthenticationType()
+    merchantAuth.name = config.API_LOGIN_ID
+    merchantAuth.transactionKey = config.TRANSACTION_KEY
+
+    # Create the payment data for a credit card
+    creditCard = apicontractsv1.creditCardType()
+    creditCard.cardNumber = payment_info.card_number # 370000000000002
+    creditCard.expirationDate = payment_info.expiration_date # 2035-12
+    creditCard.cardCode = payment_info.card_code # 123
+    
+    
+    # Add the payment data to a paymentType object
+    payment = apicontractsv1.paymentType()
+    payment.creditCard = creditCard
+    
+    # Create order information
+    order = apicontractsv1.orderType()
+    order.invoiceNumber = "10101"
+    order.description = "Golf Shirts"
+    
+    # Set the customer's Bill To address
+    customerAddress = apicontractsv1.customerAddressType()
+    customerAddress.firstName = "Ellen"
+    customerAddress.lastName = "Johnson"
+    customerAddress.company = "Souveniropolis"
+    customerAddress.address = "14 Main Street"
+    customerAddress.city = "Pecan Springs"
+    customerAddress.state = "TX"
+    customerAddress.zip = "44628"
+    customerAddress.country = "USA"
+
+    # Set the customer's identifying information
+    customerData = apicontractsv1.customerDataType()
+    customerData.type = "individual"
+    customerData.id = "99999456654"
+    customerData.email = "EllenJohnson@example.com"
+
+    # Add values for transaction settings
+    duplicateWindowSetting = apicontractsv1.settingType()
+    duplicateWindowSetting.settingName = "duplicateWindow"
+    duplicateWindowSetting.settingValue = "600"
+    settings = apicontractsv1.ArrayOfSetting()
+    settings.setting.append(duplicateWindowSetting)
+
+    # setup individual line items
+    line_item_1 = apicontractsv1.lineItemType()
+    line_item_1.itemId = "12345"
+    line_item_1.name = "first"
+    line_item_1.description = "Here's the first line item"
+    line_item_1.quantity = "2"
+    line_item_1.unitPrice = "12.95"
+    line_item_2 = apicontractsv1.lineItemType()
+    line_item_2.itemId = "67890"
+    line_item_2.name = "second"
+    line_item_2.description = "Here's the second line item"
+    line_item_2.quantity = "3"
+    line_item_2.unitPrice = "7.95"
+
+    # build the array of line items
+    line_items = apicontractsv1.ArrayOfLineItem()
+    line_items.lineItem.append(line_item_1)
+    line_items.lineItem.append(line_item_2)
+    
+     # Create a transactionRequestType object and add the previous objects to it.
+    transactionrequest = apicontractsv1.transactionRequestType()
+    transactionrequest.transactionType = "authCaptureTransaction"
+    transactionrequest.amount = payment_info.amount
+    transactionrequest.payment = payment
+    transactionrequest.order = order
+    transactionrequest.billTo = customerAddress
+    transactionrequest.customer = customerData
+    transactionrequest.transactionSettings = settings
+    transactionrequest.lineItems = line_items
+
+    # Create the payment transaction request
+    # transactionrequest = apicontractsv1.transactionRequestType()
+    # transactionrequest.transactionType = "authCaptureTransaction"
+    # transactionrequest.amount = payment_info.amount
+    # transactionrequest.payment = payment
+    
+    # Assemble the complete transaction request
+    createtransactionrequest = apicontractsv1.createTransactionRequest()
+    createtransactionrequest.merchantAuthentication = merchantAuth
+    #createtransactionrequest.refId = "MerchantID-0001"
+    createtransactionrequest.transactionRequest = transactionrequest
+
+    # Create the controller
+    controller = createTransactionController(createtransactionrequest)
+    controller.execute()
+
+    response = controller.getresponse()
+    
+    if response is not None:
+        # Check to see if the API request was successfully received and acted upon
+        if response.messages.resultCode == "Ok":
+            # Since the API request was successful, look for a transaction response
+            # and parse it to display the results of authorizing the card
+            if hasattr(response.transactionResponse, 'messages') is True:
+                message = PaymentSuccessStatus()
+                message.transaction_id = str(response.transactionResponse.transId)
+                message.response_code = str(response.transactionResponse.responseCode)
+                message.message_code = str(response.transactionResponse.messages.message[0].code)
+                message.message = str(response.transactionResponse.messages.message[0].description)
+                
+                return {"status":True,"message":message}
+            else:
+                message = PaymentFailure()
+                message.message = "Failed Transaction"
+                
+                if hasattr(response.transactionResponse, 'errors'):
+                    message.is_error=True
+                    message.error_code = response.transactionResponse.errors.error[0].errorCode
+                    message.error_message = response.transactionResponse.errors.error[0].errorText
+
+                return {"status":False, "message":message}  
+        # Or, print errors if the API request wasn't successful
+        else:
+            message = PaymentFailure()
+            message.message = "Failed Transaction"
+            message.is_error = True
+            if hasattr(response, 'transactionResponse') and hasattr(response.transactionResponse, 'errors'):
+                message.error_code = str(response.transactionResponse.errors.error[0].errorCode)
+                message.error_message = str(response.transactionResponse.errors.error[0].errorText)
+            else:
+                message.error_code = str(response.messages.message[0]['code'].text)
+                message.error_message = str(response.messages.message[0]['text'].text)
+            
+            return {"status":False, "message":message}
+    else:
+        raise HTTPException(status_code=400, detail="Transaction Failed")
 
 
-@router.post("/create")
+@router.post("/pay1")
 async def create(
     producer: Annotated[AIOKafkaProducer, Depends(get_kafka_producer)],
     token: Annotated[TokenData, Depends(get_token)],
-    name: str = Form(...),
-    price: float = Form(...),
-    stock_quantity: int = Form(...),
-    category_id: int = Form(...),
-    brand_id: int = Form(...),
-    created_by: int = Form(...),
-    status: int = Form(...),
-    file: UploadFile = File(None)
 ):
-    product = CreateProduct(
-        name=name,
-        price=price,
-        stock_quantity=stock_quantity,
-        category_id=category_id,
-        brand_id=brand_id,
-        created_by=token.userid,
-        status=status
-    )
+    # product = CreateProduct(
+    #     name=name,
+    #     price=price,
+    #     stock_quantity=stock_quantity,
+    #     category_id=category_id,
+    #     brand_id=brand_id,
+    #     created_by=token.userid,
+    #     status=status
+    # )
     
-    if file:
-        product.image_name = f"{product.guid}_{file.filename}"
+    # if file:
+    #     product.image_name = f"{product.guid}_{file.filename}"
         
-    product_dict = product.dict()
+    # product_dict = product.dict()
 
-    message = {
-        "request_id": product.guid,
-        "operation": "create",
-        "entity": "product",
-        "data": product_dict,
-    }
+    # message = {
+    #     "request_id": product.guid,
+    #     "operation": "create",
+    #     "entity": "product",
+    #     "data": product_dict,
+    # }
 
-    try:
-        obj = json.dumps(message, cls=CustomJSONEncoder).encode("utf-8")
-        await producer.send(config.KAFKA_PRODUCT_TOPIC, value=obj)
-        # await asyncio.sleep(10)
-    except Exception as e:
-        return str(e)
+    # try:
+    #     obj = json.dumps(message, cls=CustomJSONEncoder).encode("utf-8")
+    #     await producer.send(config.KAFKA_PRODUCT_TOPIC, value=obj)
+    #     # await asyncio.sleep(10)
+    # except Exception as e:
+    #     return str(e)
 
-    consumer = await get_kafka_consumer()
-    try:
-        status_message = await consume_response_from_kafka(consumer, product.guid)
-    finally:
-        await consumer.stop()
+    # consumer = await get_kafka_consumer()
+    # try:
+    #     status_message = await consume_response_from_kafka(consumer, product.guid)
+    # finally:
+    #     await consumer.stop()
 
-    if status_message:
-        if file:
-            await save_file(file, product.guid)
-        return status_message
+    # if status_message:
+    #     if file:
+    #         await save_file(file, product.guid)
+    #     return status_message
 
     status_message = {"message": "Created"}
     return status_message
-
-
-@router.patch("/update/{product_guid_id}")
-async def update_product(
-    product: UpdateProduct,
-    product_guid_id: str,
-    producer: Annotated[AIOKafkaProducer, Depends(get_kafka_producer)],
-    token: Annotated[TokenData, Depends(get_token)],
-):
-    product_data = product.model_dump(exclude_unset=True)
-    
-    message = {
-        "request_id": product_guid_id,
-        "operation": "update",
-        "entity": "product",
-        "data": product_data,
-    }
-
-    obj = json.dumps(message).encode("utf-8")
-    await producer.send(config.KAFKA_PRODUCT_TOPIC, value=obj)
-
-    consumer = await get_kafka_consumer()
-    try:
-        status_message = await consume_response_from_kafka(consumer, product_guid_id)
-    finally:
-        await consumer.stop()
-
-    if status_message:
-        return status_message
-
-    status_message = {"message": "Try again"}
-    return status_message
-
-
-@router.delete("/delete/{product_guid_id}")
-async def delete_product(
-    product_guid_id: str,
-    producer: Annotated[AIOKafkaProducer, Depends(get_kafka_producer)],
-    token: Annotated[TokenData, Depends(get_token)],
-):
-    try:
-        message = {
-            "request_id": product_guid_id,
-            "operation": "delete",
-            "entity": "product",
-            "data": {},
-        }
-
-        obj = json.dumps(message).encode("utf-8")
-        await producer.send(config.KAFKA_PRODUCT_TOPIC, value=obj)
-
-        consumer = await get_kafka_consumer()
-        try:
-            status_message = await consume_response_from_kafka(consumer, product_guid_id)
-        finally:
-            await consumer.stop()
-
-        if status_message:
-            return status_message
-
-        status_message = {"message": "Try again"}
-        return status_message
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get("/", response_model=list[PublicProduct])
-async def get_products():
-    products = await get_product_list()
-    categories = await get_category_list()
-    brands = await get_brand_list()
-    
-    cat_dict = {cat["id"]:cat["category_name"] for cat in categories}
-    brand_dict = {brand["id"]:brand["brand_name"] for brand in brands}
-    
-    for product in products:
-        product["category_name"] = cat_dict.get(product["category_id"],None)
-        product["brand_name"] = cat_dict.get(product["brand_id"],None)
-    return products
-
-@router.get("/product/{product_id}", response_model=PublicProduct)
-async def read_product_by_id(product_id:int):
-    
-    product = await get_product(product_id)
-    
-    
-    category = await get_categories(PublicProduct(**product).category_id)
-    brand = await get_brands(PublicProduct(**product).brand_id)
-
-    if category and product["category_id"] == category["id"]:
-        product["category_name"] = category["category_name"]
-        
-    if brand and product["brand_id"] == brand["id"]:
-        product["brand_name"] = brand["brand_name"]        
-        
-    return product
-
-async def save_file(file: UploadFile, product_guid: str | None):
-    file_location = f"./upload_images/{product_guid}_{file.filename}"
-    with open(file_location, "wb") as f:
-        f.write(await file.read())
-    return {"file_path": file_location}
-
 
 app.include_router(router)

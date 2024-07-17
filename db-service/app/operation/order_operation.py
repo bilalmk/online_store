@@ -8,6 +8,8 @@ from app import config
 from app.kafka_producer import send_producer
 import sys
 
+from shared.models.order_detail_model import CreateOrderWithDetail
+
 class CustomJSONEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, Decimal):
@@ -28,13 +30,26 @@ class OrderOperation:
         with get_session() as session:
             if self.operation == "create":
                 order_crud = Order_Crud(session)
-                status = order_crud.create_order(CreateOrder(**self.entity_data))
-                self.entity_data["order_id"] = status.get('order')["order_id"]
-                self.entity_data["order_status"] = status.get('order')["order_status"]
-                order_response = self.entity_data
-                order_response.pop("order_details")
+                res = order_crud.create_order(CreateOrderWithDetail(**self.entity_data))
                 
-                response = {"request_id": self.request_id, "status": status.get("status"),"order":order_response}
+                error = res.get("error")
+                status = res.get("status")
+                
+                try:
+                    if error:
+                        response = {"request_id": self.request_id, "status": status,"order":{}}
+                    else:
+                        self.entity_data["order_id"] = res.get('order')["order_id"]
+                        self.entity_data["order_status"] = res.get('order')["order_status"]
+                        order_response = self.entity_data
+                        order_response.pop("order_details")
+                        
+                        response = {"request_id": self.request_id, "status": status,"order":order_response}
+                except Exception as ex:
+                    print(str(ex))
+                    sys.stdout.flush()
+                    response = {"request_id": self.request_id, "status": status,"order":{}}
+                        
                 obj = json.dumps(response).encode("utf-8")
                 await send_producer(config.KAFKA_ORDERS_DB_RESPONSE, obj)
                 

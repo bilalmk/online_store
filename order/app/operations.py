@@ -42,6 +42,17 @@ async def get_token(token: Annotated[str, Depends(oauth2_authentication)]):
 
     return token_data
 
+async def get_order(order_id:str):
+    payload = aiohttp.FormData()
+    payload.add_field("order_id", order_id)
+    db_service_url = f"{config.DB_API_BASE_PATH}/orders/order"
+    async with config.client_session.post(db_service_url,data=payload) as response:
+        if response.status != 200:
+            res = await response.json()
+            raise HTTPException(status_code=response.status, detail=res["detail"])
+        data = await response.json()
+        return data
+
 # async def get_order_list():
 #     db_service_url = f"{config.DB_API_BASE_PATH}/orders/"
 #     async with config.client_session.get(db_service_url) as response:
@@ -50,16 +61,6 @@ async def get_token(token: Annotated[str, Depends(oauth2_authentication)]):
 #             raise HTTPException(status_code=response.status, detail=data["detail"])
 #         return data
     
-# async def get_order(order_id:int):
-#     payload = aiohttp.FormData()
-#     payload.add_field("order_id", order_id)
-#     db_service_url = f"{config.DB_API_BASE_PATH}/orders/order"
-#     async with config.client_session.post(db_service_url,data=payload) as response:
-#         if response.status != 200:
-#             res = await response.json()
-#             raise HTTPException(status_code=response.status, detail=res["detail"])
-#         data = await response.json()
-#         return data
     
 # async def get_categories(category_id:int):
 #     payload = aiohttp.FormData()

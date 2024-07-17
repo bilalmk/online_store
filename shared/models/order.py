@@ -1,18 +1,20 @@
 from datetime import datetime
 from decimal import Decimal
-from typing import List, Optional
+from typing import TYPE_CHECKING, List, Optional
 import uuid
 from fastapi import File
 from sqlmodel import Relationship, SQLModel, Field, Column, String
 from sqlalchemy import DECIMAL, Float, Numeric
-from shared.models.order_detail import CreateOrderDetail
+
+#if TYPE_CHECKING:
+from shared.models.order_detail import CreateOrderDetail, OrderDetail
 
 
 class BaseOrder(SQLModel):
     __tablename__ = "orders"  # type: ignore
     customer_id: int = Field(..., gt=0)
     total_amount: float = Field(...)
-    #total_amount: float = Field(..., sa_column=Column(Numeric(10, 2)))
+    # total_amount: float = Field(..., sa_column=Column(Numeric(10, 2)))
     # total_amount: Decimal = Field(
     #     sa_column=Column(DECIMAL(precision=10, scale=2), nullable=False)
     # )
@@ -31,19 +33,24 @@ class BaseOrder(SQLModel):
     guid: Optional[str] = Field(
         default_factory=lambda: str(uuid.uuid4()), max_length=40
     )
-    #created_by: int = Field(..., gt=0)
+    # created_by: int = Field(..., gt=0)
     created_at: datetime = Field(default=datetime.utcnow())
     status: int = Field(default=1, gt=0, lt=100)
-    
+
 
 class Order(BaseOrder, table=True):
     order_id: Optional[int] = Field(default=None, primary_key=True)
+    order_details: List["OrderDetail"] = Relationship(back_populates="order")
+
 
 class DBOrder(BaseOrder):
     pass
 
+
 class CreateOrder(BaseOrder):
-    order_details: Optional[List["CreateOrderDetail"]]
+    pass
+    #order_details: Optional[List["CreateOrderDetail"]]
+
 
 class PublicOrder(BaseOrder):
-    id: int
+    order_id: int

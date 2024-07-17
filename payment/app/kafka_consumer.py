@@ -1,10 +1,55 @@
+from datetime import datetime
 import json
 import asyncio
 from aiokafka import AIOKafkaConsumer  # type: ignore
 from app import config
+import os
 
 responses = {}
 
+async def consume_events(topic, group_id):
+    # Create a consumer instance.
+    consumer = AIOKafkaConsumer(
+        topic,
+        bootstrap_servers=str(config.BOOTSTRAP_SERVER),
+        group_id=group_id,
+        auto_offset_reset="earliest",
+    )
+
+    # Start the consumer.
+    await consumer.start()
+    try:
+        # Continuously listen for messages.
+        async for message in consumer:
+            pass
+            # create user
+            #data = json.loads(message.value.decode("utf-8"))
+    finally:
+        # Ensure to close the consumer when done.
+        await consumer.stop()
+
+
+def log_message(entity_data, topic):
+    # print(f"Received message: {message.value.decode()} on topic {message.topic}")
+    # content = f"{datetime.now().time()}  - Received message: {entity_data} on topic {message.topic} and dbuser is {db_user}"
+
+    filename = "example.txt"
+    content = (
+        f"{datetime.now().time()}  - Received message: {entity_data} on topic {topic}"
+    )
+    write_to_file(filename, content)
+
+
+def write_to_file(filename, content):
+    # Check if the file exists
+    if os.path.exists(filename):
+        # Open the file in append mode
+        with open(filename, "a") as file:
+            file.write(content + "\n")
+    else:
+        # Create a new file and write to it
+        with open(filename, "w") as file:
+            file.write(content + "\n")
 
 async def consume_response_from_kafka(consumer, request_id):
     message_count = 0
@@ -45,9 +90,9 @@ async def consume_response_from_kafka(consumer, request_id):
 
 async def get_kafka_consumer():
     consumer = AIOKafkaConsumer(
-        config.KAFKA_PRODUCTS_DB_RESPONSE,
+        config.KAFKA_PAYMENTS_DB_RESPONSE,
         bootstrap_servers=str(config.BOOTSTRAP_SERVER),
-        group_id=config.KAFKA_PRODUCT_CONSUMER_GROUP_ID,
+        group_id=config.KAFKA_PAYMENT_CONSUMER_GROUP_ID,
         auto_offset_reset="earliest",
     )
     await consumer.start()

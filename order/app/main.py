@@ -13,9 +13,10 @@ from app.kafka_consumer import (
 )
 
 from app import config
-from app.operations import get_token
-from shared.models.order import CreateOrder
+from app.operations import get_order, get_token
+from shared.models.order import CreateOrder, Order, PublicOrder
 #from shared.models.order_detail import CreateOrderDetail
+from shared.models.order_detail_model import CreateOrderWithDetail, PublicOrderWithDetail
 from shared.models.token import  TokenData
 
 
@@ -53,7 +54,7 @@ class CustomJSONEncoder(json.JSONEncoder):
 
 @router.post("/create")
 async def create(
-    order: CreateOrder,
+    order: CreateOrderWithDetail,
     producer: Annotated[AIOKafkaProducer, Depends(get_kafka_producer)],
     token: Annotated[TokenData, Depends(get_token)]
 ):
@@ -84,7 +85,8 @@ async def create(
         await consumer.stop()
 
     if status_message:
-        await producer.send(config.KAFKA_ORDER_TOPIC, value=status_message.order)
+        order_obj = json.dumps(status_message.get("order")).encode("utf-8")
+        await producer.send(config.KAFKA_ORDER_TOPIC, value=order_obj)
 
         ## produce to payment service, payment service will product to notification        
         return status_message
@@ -92,6 +94,10 @@ async def create(
     status_message = {"message": "Created"}
     return status_message
 
+@router.get("/order/{order_id}", response_model=PublicOrder)
+async def read_order_by_id(order_id:str):
+    order = await get_order(order_id)
+    return order
 
 # @router.patch("/update/{product_guid_id}")
 # async def update_product(
@@ -162,11 +168,6 @@ async def create(
 # async def get_products(token: Annotated[TokenData, Depends(get_token)]):
 #     orders = await get_order_list(token.user_id)
 #     return orders
-
-# @router.get("/order/{order_id}", response_model=PublicOrder)
-# async def read_order_by_id(order_id:str):
-#     order = await get_order(order_id)
-#     return order
 
 
 

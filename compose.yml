@@ -121,7 +121,22 @@ services:
       - broker
       - db-service
     ports:
-      - "8017:8000"      
+      - "8017:8000" 
+
+  payment:
+    container_name: payment
+    build:
+      context: ./payment
+      dockerfile: Dockerfile
+    volumes:
+      - ./payment:/code
+      - ./shared:/code/shared
+    depends_on:
+      - broker
+      - db-service
+      - order
+    ports:
+      - "8018:8000"        
   
   kafka-ui:
     image: provectuslabs/kafka-ui

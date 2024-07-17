@@ -4,6 +4,8 @@ from app.crud.order_crud import Order_Crud
 from fastapi import Depends, HTTPException, APIRouter, Form
 from fastapi import APIRouter
 
+from shared.models.order_detail_model import PublicOrderWithDetail
+
 def get_order_crud(session: sessionDep) -> Order_Crud:
     return Order_Crud(session)
 
@@ -12,10 +14,9 @@ router = APIRouter(
     tags=["orders"],
 )
 
-@router.post("/order", response_model=PublicOrder)
-async def get_order(order_id: int = Form(...), order_crud=Depends(get_order_crud)):
+@router.post("/order", response_model=PublicOrderWithDetail)
+async def get_order(order_id: str = Form(...), order_crud=Depends(get_order_crud)):
     order = order_crud.get_order_by_id(order_id)
-
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
 
