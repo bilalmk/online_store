@@ -19,7 +19,7 @@ class BaseUser(SQLModel):
 
 class User(BaseUser, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    password: str
+    password: Optional[str] = None
     
 class DBUser(User):
     pass

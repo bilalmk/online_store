@@ -40,9 +40,11 @@ def upgrade() -> None:
         sa.Column('quantity', sa.Integer, nullable=False),
         sa.Column('unit_price', sa.Numeric(10, 2), nullable=False),
         sa.Column('discount', sa.Numeric(10, 2), default=0.00),
-        sa.Column('total_price', sa.Numeric(10, 2), sa.Computed('quantity * unit_price - discount')),
+        # sa.Column('total_price', sa.Numeric(10, 2), sa.Computed('quantity * unit_price - discount')),
+        sa.Column('total_price', sa.Numeric(10, 2), default=0.00),
         sa.Column('create_date', sa.TIMESTAMP, server_default=sa.func.current_timestamp()),
-        sa.Column('update_date', sa.TIMESTAMP, server_default=sa.func.current_timestamp(), onupdate=sa.func.current_timestamp())
+        sa.Column('update_date', sa.TIMESTAMP, server_default=sa.func.current_timestamp(), onupdate=sa.func.current_timestamp()),
+        sa.Column('status', sa.SmallInteger, default=1),
     )
 
 

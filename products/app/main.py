@@ -13,7 +13,15 @@ from app.kafka_consumer import (
 )
 
 from app import config
-from app.operations import get_token, get_product_list, get_product, get_categories, get_brands, get_category_list, get_brand_list
+from app.operations import (
+    get_token,
+    get_product_list,
+    get_product,
+    get_categories,
+    get_brands,
+    get_category_list,
+    get_brand_list,
+)
 from shared.models.brand import PublicBrand
 from shared.models.category import PublicCategory
 from shared.models.product import CreateProduct, Product, PublicProduct, UpdateProduct
@@ -63,7 +71,7 @@ async def create(
     brand_id: int = Form(...),
     created_by: int = Form(...),
     status: int = Form(...),
-    file: UploadFile = File(None)
+    file: UploadFile = File(None),
 ):
     product = CreateProduct(
         name=name,
@@ -72,12 +80,12 @@ async def create(
         category_id=category_id,
         brand_id=brand_id,
         created_by=token.userid,
-        status=status
+        status=status,
     )
-    
+
     if file:
         product.image_name = f"{product.guid}_{file.filename}"
-        
+
     product_dict = product.dict()
 
     message = {
@@ -117,7 +125,7 @@ async def update_product(
     token: Annotated[TokenData, Depends(get_token)],
 ):
     product_data = product.model_dump(exclude_unset=True)
-    
+
     message = {
         "request_id": product_guid_id,
         "operation": "update",
@@ -160,7 +168,9 @@ async def delete_product(
 
         consumer = await get_kafka_consumer()
         try:
-            status_message = await consume_response_from_kafka(consumer, product_guid_id)
+            status_message = await consume_response_from_kafka(
+                consumer, product_guid_id
+            )
         finally:
             await consumer.stop()
 
@@ -179,31 +189,32 @@ async def get_products():
     products = await get_product_list()
     categories = await get_category_list()
     brands = await get_brand_list()
-    
-    cat_dict = {cat["id"]:cat["category_name"] for cat in categories}
-    brand_dict = {brand["id"]:brand["brand_name"] for brand in brands}
-    
+
+    cat_dict = {cat["id"]: cat["category_name"] for cat in categories}
+    brand_dict = {brand["id"]: brand["brand_name"] for brand in brands}
+
     for product in products:
-        product["category_name"] = cat_dict.get(product["category_id"],None)
-        product["brand_name"] = cat_dict.get(product["brand_id"],None)
+        product["category_name"] = cat_dict.get(product["category_id"], None)
+        product["brand_name"] = cat_dict.get(product["brand_id"], None)
     return products
 
+
 @router.get("/product/{product_id}", response_model=PublicProduct)
-async def read_product_by_id(product_id:int):
-    
+async def read_product_by_id(product_id: int):
+
     product = await get_product(product_id)
-    
-    
+
     category = await get_categories(PublicProduct(**product).category_id)
     brand = await get_brands(PublicProduct(**product).brand_id)
 
     if category and product["category_id"] == category["id"]:
         product["category_name"] = category["category_name"]
-        
+
     if brand and product["brand_id"] == brand["id"]:
-        product["brand_name"] = brand["brand_name"]        
-        
+        product["brand_name"] = brand["brand_name"]
+
     return product
+
 
 async def save_file(file: UploadFile, product_guid: str | None):
     file_location = f"./upload_images/{product_guid}_{file.filename}"

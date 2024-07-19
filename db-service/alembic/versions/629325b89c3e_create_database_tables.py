@@ -75,8 +75,8 @@ def upgrade() -> None:
             "id", sa.Integer, primary_key=True, nullable=False, autoincrement=True
         ),
         sa.Column("parent_id", sa.Integer, default=0),
-        sa.Column("category_name", sa.String(255), nullable=False, unique=True),
-        sa.Column("category_slug", sa.String(255), nullable=False, unique=True),
+        sa.Column("category_name", sa.String(255), nullable=False),
+        sa.Column("category_slug", sa.String(255), nullable=False),
         sa.Column("guid", sa.CHAR(36), nullable=False),
         sa.Column("created_by", sa.Integer, nullable=False),
         sa.Column(

@@ -52,6 +52,17 @@ async def get_order(order_id:str):
             raise HTTPException(status_code=response.status, detail=res["detail"])
         data = await response.json()
         return data
+    
+async def get_order_products(product_ids:str):
+    payload = aiohttp.FormData()
+    payload.add_field("product_ids", product_ids)
+    db_service_url = f"{config.DB_API_BASE_PATH}/products/product_by_ids"
+    async with config.client_session.post(db_service_url,data=payload) as response:
+        if response.status!=200:
+            return None
+        data = await response.json()
+        return data
+    
 
 # async def get_order_list():
 #     db_service_url = f"{config.DB_API_BASE_PATH}/orders/"

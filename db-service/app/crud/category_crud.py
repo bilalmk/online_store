@@ -13,7 +13,13 @@ class Category_Crud:
 
     def create_category(self, category: CreateCategory):
         try:
-            statement = select(Category).where(Category.guid == category.guid)
+            # statement = select(Category).where(Category.guid == category.guid)
+            statement = (
+                select(Category)
+                .where(Category.parent_id == category.parent_id)
+                .where(Category.category_name == category.category_name)
+                .where(Category.status != 2)
+            )
             result = self.session.exec(statement).first()
             if result:
                 return {"status": "exist"}
@@ -57,7 +63,9 @@ class Category_Crud:
         try:
 
             statement = (
-                select(Category).where(Category.guid == request_id).where(Category.status == 1)
+                select(Category)
+                .where(Category.guid == request_id)
+                .where(Category.status == 1)
             )
             db_category = self.session.exec(statement).first()
 
@@ -74,7 +82,9 @@ class Category_Crud:
 
     def get_category(self, id):
         try:
-            statement = select(Category).where(Category.id == id).where(Category.status == 1)
+            statement = (
+                select(Category).where(Category.id == id).where(Category.status == 1)
+            )
             category = self.session.exec(statement).first()
             if not category:
                 return None
@@ -84,7 +94,9 @@ class Category_Crud:
 
     def get_category_by_id(self, id):
         try:
-            statement = select(Category).where(Category.id == id).where(Category.status == 1)
+            statement = (
+                select(Category).where(Category.id == id).where(Category.status == 1)
+            )
             category = self.session.exec(statement).first()
             if not category:
                 return None

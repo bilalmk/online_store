@@ -27,7 +27,7 @@ class BaseOrderDetail(SQLModel):
     update_date: datetime = Field(default=datetime.utcnow())
     create_date: datetime = Field(default=datetime.utcnow())
     status: int = Field(default=1, gt=0, lt=100)
-    order_id: int | None = Field(default=None, foreign_key="orders.order_id")
+    order_id: Optional[int] = Field(default=None, foreign_key="orders.order_id")
 
     def calculate_total_price(self):
         if self.discount is None:
@@ -43,7 +43,7 @@ class OrderDetail(BaseOrderDetail, table=True):
 
 class DBOrderDetail(BaseOrderDetail):
     id: int
-    order_id: int
+    # order_id: int
 
 
 class CreateOrderDetail(BaseOrderDetail):
@@ -52,3 +52,4 @@ class CreateOrderDetail(BaseOrderDetail):
 
 class PublicOrderDetail(BaseOrderDetail):
     id: int
+    product_name: Optional[str] = Field(default=None)

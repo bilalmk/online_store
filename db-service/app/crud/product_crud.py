@@ -3,7 +3,7 @@ import sys
 from fastapi import HTTPException
 from shared.models.product import CreateProduct, Product, UpdateProduct
 from sqlalchemy.exc import IntegrityError
-from sqlmodel import select
+from sqlmodel import and_, select
 
 
 class Product_Crud:
@@ -95,6 +95,14 @@ class Product_Crud:
     def get_products(self):
         try:
             statement = select(Product).where(Product.status == 1)
+            products = self.session.exec(statement).all()
+            return products
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+        
+    def get_products_by_ids(self, ids):
+        try:
+            statement = select(Product).where(and_(Product.status == 1, Product.id.in_(ids)))
             products = self.session.exec(statement).all()
             return products
         except Exception as e:
