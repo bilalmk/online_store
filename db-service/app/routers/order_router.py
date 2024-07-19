@@ -18,9 +18,11 @@ router = APIRouter(
 
 
 @router.post("/order_by_guid", response_model=PublicOrderWithDetail)
-async def get_order_by_guid(order_id: str = Form(...), order_crud=Depends(get_order_crud)):
+async def get_order_by_guid(
+    order_id: str = Form(...), order_crud=Depends(get_order_crud)
+):
     order = order_crud.get_order_by_guid(order_id)
-    
+
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
 
@@ -28,9 +30,11 @@ async def get_order_by_guid(order_id: str = Form(...), order_crud=Depends(get_or
 
 
 @router.post("/order_by_id", response_model=PublicOrderWithDetail)
-async def get_order_by_id(order_id: int = Form(...), order_crud=Depends(get_order_crud)):
+async def get_order_by_id(
+    order_id: int = Form(...), order_crud=Depends(get_order_crud)
+):
     order = order_crud.get_order_by_id(order_id)
-    
+
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
 
@@ -40,7 +44,20 @@ async def get_order_by_id(order_id: int = Form(...), order_crud=Depends(get_orde
 @router.post("/customer_order", response_model=list[PublicOrderWithDetail])
 async def get_orders(customer_id: int = Form(...), order_crud=Depends(get_order_crud)):
     orders = order_crud.get_orders(customer_id)
-    
+
     if not orders:
         raise HTTPException(status_code=404, detail="Order not found")
     return orders
+
+
+@router.patch("/update_order_payment_status", response_model=PublicOrder)
+async def update_order_status(
+    order_id: int = Form(...),
+    payment_status: str = Form(...),
+    order_crud=Depends(get_order_crud),
+):
+    order = order_crud.update_order_payment_status(order_id, payment_status)
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    return order

@@ -8,25 +8,42 @@ from fastapi import APIRouter, FastAPI, Depends, File, Form, HTTPException, Uplo
 from aiokafka import AIOKafkaProducer  # type: ignore
 from app.kafka_producer import get_kafka_producer
 from app.kafka_consumer import (
-    consume_events,
+    consume_events_order,
+    consume_events_payment,
     get_kafka_consumer,
     consume_response_from_kafka,
 )
 
 from app import config
-from app.operations import get_customer_information, get_order_by_guid, get_order_by_id, get_products_by_ids, get_token
+from app.operations import (
+    get_customer_information,
+    get_order_by_guid,
+    get_order_by_id,
+    get_products_by_ids,
+    get_token,
+    update_payment_status,
+)
 
 # from shared.models.brand import PublicBrand
 # from shared.models.category import PublicCategory
 # from shared.models.product import CreateProduct, Product, PublicProduct, UpdateProduct
+from shared.models.notification import CreateNotification
 from shared.models.order_detail_model import PublicOrderWithDetail
+
 # from shared.models.order_detail import PublicOrderDetail
-from shared.models.payment import PaymentFailure, PaymentInfo, PaymentSuccessStatus
+from shared.models.payment import (
+    CreatePayment,
+    PaymentFailure,
+    PaymentInfo,
+    PaymentStatus,
+    PaymentSuccessStatus,
+)
 from shared.models.token import Token, TokenData
 from shared.models.user import User
 import asyncio
 from authorizenet import apicontractsv1
 from authorizenet.apicontrollers import createTransactionController
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
@@ -34,7 +51,14 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     config.client_session = ClientSession(connector=TCPConnector(limit=100))
     await asyncio.sleep(10)
     asyncio.create_task(
-        consume_events(config.KAFKA_ORDER_TOPIC, config.KAFKA_ORDER_CONSUMER_GROUP_ID)
+        consume_events_order(
+            config.KAFKA_ORDER_TOPIC, config.KAFKA_ORDER_CONSUMER_GROUP_ID
+        )
+    )
+    asyncio.create_task(
+        consume_events_payment(
+            config.KAFKA_PAYMENT_TOPIC, config.KAFKA_PAYMENT_CONSUMER_GROUP_ID
+        )
     )
     yield
     await config.client_session.close()
@@ -52,7 +76,7 @@ router = APIRouter(
 
 @app.get("/")
 def main():
-    return {"message": "Hello World from paymentss"}
+    return {"message": "Hello World from payments"}
 
 
 class CustomJSONEncoder(json.JSONEncoder):
@@ -64,12 +88,18 @@ class CustomJSONEncoder(json.JSONEncoder):
         return super(CustomJSONEncoder, self).default(obj)
 
 
-@router.post("/pay")
-async def process_payment(
-    payment_info: PaymentInfo,
-    producer: Annotated[AIOKafkaProducer, Depends(get_kafka_producer)],
-    token: Annotated[TokenData, Depends(get_token)],
-):
+async def make_payment(token: TokenData, payment_info: PaymentInfo):
+    payment_status = PaymentStatus()
+    payment_status.status = True
+    payment_status.message = PaymentSuccessStatus(
+        transaction_id="80022244231",
+        response_code=1,
+        message_code=1,
+        message="This transaction has been approved.",)
+    return payment_status
+    # =========================================================================================
+    # VALIDATE USER ID
+    # =========================================================================================
     if token.userid != payment_info.customer_id:
         raise HTTPException(status_code=422, detail="Invalid user id")
 
@@ -84,7 +114,7 @@ async def process_payment(
     customer_info = await get_customer_information(customer_id)
     customer_instance = User(**customer_info)
     customer_info = User.model_validate(customer_instance)
-    
+
     # GET IDS OF PRODUCTS IN ORDER DETAIL
     product_ids = [str(product["id"]) for product in order_info.get("order_details")]
     product_ids_str = ",".join(product_ids)
@@ -98,15 +128,15 @@ async def process_payment(
     # ATTACHED PRODUCT NAME WITH ORDER DETAIL USING PRODUCT ID
     # for order_detail in order_info.get("order_details"):
     #     order_detail["product_name"] = product_dict[order_detail["product_id"]]
-    
-    #order_detail_instance = PublicOrderDetail(order_detail[0])
+
+    # order_detail_instance = PublicOrderDetail(order_detail[0])
     order_instance = PublicOrderWithDetail(**order_info)
     order_info = PublicOrderWithDetail.model_validate(order_instance)
-    
+
     # ATTACHED PRODUCT NAME WITH ORDER DETAIL USING PRODUCT ID
     for order_detail in order_info.order_details:
         order_detail.product_name = product_dict[order_detail.product_id]
-        
+
     # =========================================================================================
     # CREATE PAYMENT TRANSACTION
     # =========================================================================================
@@ -146,7 +176,7 @@ async def process_payment(
     customerData.type = "individual"
     customerData.id = str(customer_info.id)
     customerData.email = customer_info.email
-    
+
     # Add values for transaction settings
     duplicateWindowSetting = apicontractsv1.settingType()
     duplicateWindowSetting.settingName = "duplicateWindow"
@@ -206,24 +236,28 @@ async def process_payment(
     controller.execute()
 
     response = controller.getresponse()
+    payment_status = PaymentStatus()
 
     if response is not None:
         # Check to see if the API request was successfully received and acted upon
         if response.messages.resultCode == "Ok":
             # Since the API request was successful, look for a transaction response
             # and parse it to display the results of authorizing the card
+
             if hasattr(response.transactionResponse, "messages") is True:
                 message = PaymentSuccessStatus()
                 message.transaction_id = str(response.transactionResponse.transId)
-                message.response_code = str(response.transactionResponse.responseCode) # type: ignore
+                message.response_code = str(response.transactionResponse.responseCode)  # type: ignore
                 message.message_code = str(
                     response.transactionResponse.messages.message[0].code
-                ) # type: ignore
+                )  # type: ignore
                 message.message = str(
                     response.transactionResponse.messages.message[0].description
                 )
-
-                return {"status": True, "message": message}
+                payment_status.status = True
+                payment_status.message = message
+                return payment_status, order_info, customer_info
+                # return {"status": True, "message": message}
             else:
                 message = PaymentFailure()
                 message.message = "Failed Transaction"
@@ -237,7 +271,10 @@ async def process_payment(
                         0
                     ].errorText
 
-                return {"status": False, "message": message}
+                payment_status.status = False
+                payment_status.message = message
+                return payment_status, order_info, customer_info
+                # return {"status": False, "message": message}
         # Or, print errors if the API request wasn't successful
         else:
             message = PaymentFailure()
@@ -248,17 +285,113 @@ async def process_payment(
             ):
                 message.error_code = str(
                     response.transactionResponse.errors.error[0].errorCode
-                ) # type: ignore
+                )  # type: ignore
                 message.error_message = str(
                     response.transactionResponse.errors.error[0].errorText
                 )
             else:
-                message.error_code = str(response.messages.message[0]["code"].text) # type: ignore
+                message.error_code = str(response.messages.message[0]["code"].text)  # type: ignore
                 message.error_message = str(response.messages.message[0]["text"].text)
 
-            return {"status": False, "message": message}
+            payment_status.status = False
+            payment_status.message = message
+            return payment_status, order_info, customer_info
+            # return {"status": False, "message": message}
     else:
         raise HTTPException(status_code=400, detail="Transaction Failed")
+
+
+async def produce_create_payment(
+    payment_info: PaymentInfo, transaction_id: str, producer: AIOKafkaProducer
+):
+    payment = CreatePayment(
+        order_id=payment_info.order_id,
+        customer_id=payment_info.customer_id,
+        amount=payment_info.amount,
+        transaction_id=transaction_id,
+        payment_gateway="authorize.net",
+        status=1,
+    )
+    payment_dict = payment.dict()
+    message = {
+        "request_id": payment_info.order_id,
+        "operation": "create",
+        "entity": "order",
+        "data": payment_dict,
+    }
+
+    try:
+        obj = json.dumps(message, cls=CustomJSONEncoder).encode("utf-8")
+        await producer.send(config.KAFKA_PAYMENT_TOPIC, value=obj)
+        # await asyncio.sleep(10)
+    except Exception as e:
+        return str(e)
+
+
+async def produce_notification_and_inventory(
+    order_info, customer_info, producer: AIOKafkaProducer
+):
+    notification = CreateNotification(
+        client_information=customer_info, order_information=order_info
+    )
+
+    notification_dict = notification.dict()
+    message = {
+        "request_id": order_info.order_id,
+        "operation": "create",
+        "entity": "order",
+        "data": notification_dict,
+    }
+
+    try:
+        obj = json.dumps(message, cls=CustomJSONEncoder).encode("utf-8")
+        await producer.send(config.KAFKA_NOTIFICATION_TOPIC, value=obj)
+        # await asyncio.sleep(10)
+    except Exception as e:
+        return str(e)
+
+
+@router.post("/pay")
+async def process_payment(
+    payment_info: PaymentInfo,
+    producer: Annotated[AIOKafkaProducer, Depends(get_kafka_producer)],
+    token: Annotated[TokenData, Depends(get_token)],
+):
+    # payment_status, order_info, customer_info = await make_payment(token, payment_info)
+    payment_status = await make_payment(token, payment_info)
+    if payment_status.status:
+        # update payment status
+        update_order = await update_payment_status(payment_info.order_id, "paid")
+        # order_info.payment_status = "paid"
+
+        # produce create payment data for kafka
+        await produce_create_payment(
+            payment_info, str(payment_status.message.transaction_id), producer  # type: ignore
+        )
+
+        # produce payment data for notification and inventory management
+        # await produce_notification_and_inventory(order_info, customer_info, producer)
+
+        # send data to kafka for create payment
+        # send data to kafka for notification and inventory
+
+    # # check payment_status.status if true then send data to kafka for notification and inventory
+    # if payment_status.status:
+    #     message = {
+    #         "request_id": payment_info.order_id,
+    #         "operation": "create",
+    #         "entity": "order",
+    #         "data": {"status": "paid"},
+    #     }
+
+    #     try:
+    #         obj = json.dumps(message, cls=CustomJSONEncoder).encode("utf-8")
+    #         await producer.send(config.KAFKA_ORDER_TOPIC, value=obj)
+    #         # await asyncio.sleep(10)
+    #     except Exception as e:
+    #         return str(e)
+
+    return payment_status
 
 
 @router.post("/pay1")

@@ -136,7 +136,37 @@ services:
       - db-service
       - order
     ports:
-      - "8018:8000"        
+      - "8018:8000"
+
+  notification:
+    container_name: notification
+    build:
+      context: ./notification
+      dockerfile: Dockerfile
+    volumes:
+      - ./notification:/code
+      - ./shared:/code/shared
+    depends_on:
+      - broker
+      - db-service
+      - payment
+    ports:
+      - "8019:8000"
+
+  inventory:
+    container_name: inventory
+    build:
+      context: ./inventory
+      dockerfile: Dockerfile
+    volumes:
+      - ./inventory:/code
+      - ./shared:/code/shared
+    depends_on:
+      - broker
+      - db-service
+      - payment
+    ports:
+      - "8020:8000"      
   
   kafka-ui:
     image: provectuslabs/kafka-ui

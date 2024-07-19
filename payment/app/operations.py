@@ -1,7 +1,9 @@
+import sys
 from app import config
 import json
 from fastapi import Depends, HTTPException, status
 import aiohttp
+from shared.models.payment import CreatePayment
 from shared.models.token import TokenData
 from fastapi.security import OAuth2PasswordBearer
 from typing import Annotated
@@ -59,19 +61,20 @@ async def get_order_by_id(id: int):
     payload.add_field("order_id", id)
     db_service_url = f"{config.DB_API_BASE_PATH}/orders/order_by_id"
     async with config.client_session.post(db_service_url, data=payload) as response:
-        
+
         if response.status != 200:
             return None
 
         data = await response.json()
         return data
-    
+
+
 async def get_order_by_guid(guid: str):
     payload = aiohttp.FormData()
     payload.add_field("order_id", guid)
     db_service_url = f"{config.DB_API_BASE_PATH}/orders/order_by_guid"
     async with config.client_session.post(db_service_url, data=payload) as response:
-        
+
         if response.status != 200:
             return None
 
@@ -90,58 +93,22 @@ async def get_customer_information(customer_id: int):
         return data
 
 
-# async def get_product_list():
-#     db_service_url = f"{config.DB_API_BASE_PATH}/products/"
-#     async with config.client_session.get(db_service_url) as response:
-#         data = await response.json()
-#         if response.status != 200:
-#             raise HTTPException(status_code=response.status, detail=data["detail"])
-#         return data
+async def update_payment_status(order_id: int, payment_status: str = "paid"):
+    payload = aiohttp.FormData()
+    payload.add_field("order_id", order_id)
+    payload.add_field("payment_status", payment_status)
+    db_service_url = f"{config.DB_API_BASE_PATH}/orders/update_order_payment_status"
+    async with config.client_session.patch(db_service_url, data=payload) as response:
+        print(response.status)
+        if response.status != 200:
+            return None
+        data = await response.json()
+        return data
 
-# async def get_product(product_id:int):
-#     payload = aiohttp.FormData()
-#     payload.add_field("product_id", product_id)
-#     db_service_url = f"{config.DB_API_BASE_PATH}/products/product"
-#     async with config.client_session.post(db_service_url,data=payload) as response:
-#         if response.status != 200:
-#             res = await response.json()
-#             raise HTTPException(status_code=response.status, detail=res["detail"])
-#         data = await response.json()
-#         return data
-
-# async def get_categories(category_id:int):
-#     payload = aiohttp.FormData()
-#     payload.add_field("category_id",category_id)
-#     db_service_url = f"{config.DB_API_BASE_PATH}/categories/category"
-#     async with config.client_session.post(db_service_url,data=payload) as response:
-#         if response.status != 200:
-#             return None
-#         data = await response.json()
-#         return data
-
-# async def get_category_list():
-#     db_service_url = f"{config.DB_API_BASE_PATH}/categories/"
-#     async with config.client_session.get(db_service_url) as response:
-#         data = await response.json()
-#         if response.status != 200:
-#             return None
-#         return data
-
-
-# async def get_brands(brand_id:int):
-#     payload = aiohttp.FormData()
-#     payload.add_field("brand_id",brand_id)
-#     db_service_url = f"{config.DB_API_BASE_PATH}/brands/brand"
-#     async with config.client_session.post(db_service_url,data=payload) as response:
-#         if response.status != 200:
-#             return None
-#         data = await response.json()
-#         return data
-
-# async def get_brand_list():
-#     db_service_url = f"{config.DB_API_BASE_PATH}/brands/"
-#     async with config.client_session.get(db_service_url) as response:
-#         data = await response.json()
-#         if response.status != 200:
-#             return None
-#         return data
+async def insert_payment(payment: CreatePayment):
+    db_service_url = f"{config.DB_API_BASE_PATH}/payments/create"
+    async with config.client_session.post(db_service_url, json=payment) as response:
+        if response.status != 200:
+            return None
+        data = await response.json()
+        return data

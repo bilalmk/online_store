@@ -1,13 +1,16 @@
 from datetime import datetime
 import json
 import asyncio
+import sys
 from aiokafka import AIOKafkaConsumer  # type: ignore
 from app import config
 import os
 
+from app.operations import insert_payment
+
 responses = {}
 
-async def consume_events(topic, group_id):
+async def consume_events_order(topic, group_id):
     # Create a consumer instance.
     consumer = AIOKafkaConsumer(
         topic,
@@ -24,6 +27,29 @@ async def consume_events(topic, group_id):
             pass
             # create user
             #data = json.loads(message.value.decode("utf-8"))
+    finally:
+        # Ensure to close the consumer when done.
+        await consumer.stop()
+
+async def consume_events_payment(topic, group_id):
+    # Create a consumer instance.
+    consumer = AIOKafkaConsumer(
+        topic,
+        bootstrap_servers=str(config.BOOTSTRAP_SERVER),
+        group_id=group_id,
+        auto_offset_reset="earliest",
+    )
+
+    # Start the consumer.
+    await consumer.start()
+    try:
+        # Continuously listen for messages.
+        async for message in consumer:
+            payload = json.loads(message.value.decode("utf-8"))
+            request_id = payload.get("request_id")
+            data = payload.get("data")
+            await insert_payment(data)
+            
     finally:
         # Ensure to close the consumer when done.
         await consumer.stop()

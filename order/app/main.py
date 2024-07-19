@@ -67,7 +67,7 @@ async def create(
     message = {
         "request_id": order.guid,
         "operation": "create",
-        "entity": "order",
+        "entity": "payment",
         "data": order_dict,
     }
 
@@ -85,7 +85,7 @@ async def create(
         await consumer.stop()
 
     if status_message:
-       
+        
         order_obj = json.dumps(status_message.get("order")).encode("utf-8")
         await producer.send(config.KAFKA_ORDER_TOPIC, value=order_obj)
 
