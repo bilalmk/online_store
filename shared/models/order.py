@@ -30,6 +30,7 @@ class BaseOrder(SQLModel):
         default="pending", min_length=3, max_length=100
     )
     order_status: Optional[str] = Field(default="process", min_length=3, max_length=100)
+    notification_status: Optional[int] = Field(default=0, ge=0 , le=1)
     guid: Optional[str] = Field(
         default_factory=lambda: str(uuid.uuid4()), max_length=40
     )

@@ -4,6 +4,7 @@ import aiohttp
 from shared.models.token import TokenData
 from fastapi.security import OAuth2PasswordBearer
 from typing import Annotated
+import sys
 
 oauth2_authentication = OAuth2PasswordBearer(tokenUrl="token")
 
@@ -41,23 +42,21 @@ async def get_token(token: Annotated[str, Depends(oauth2_authentication)]):
 
     return token_data
 
+async def update_order_notification_status(order_id:int, notification_status=1):
+    try:
+        payload = aiohttp.FormData()
+        payload.add_field("order_id", order_id)
+        payload.add_field("notification_status", notification_status)
+        db_service_url = config.DB_API_BASE_PATH+"/orders/update_order_notification_status"
+        
+        async with config.client_session.patch(db_service_url, data=payload) as response:
+            if response.status != 200:
+                return None
+            data = await response.json()
+            return data
+    except Exception as e:
+        print(str(e))
+        sys.stdout.flush()
+        return None
 
-async def get_category_list():
-    db_service_url = f"{config.DB_API_BASE_PATH}/categories/"
-    async with config.client_session.get(db_service_url) as response:
-        data = await response.json()
-        if response.status != 200:
-            raise HTTPException(status_code=response.status, detail=data["detail"])
-        return data
 
-
-async def get_category(category_id: int):
-    payload = aiohttp.FormData()
-    payload.add_field("category_id", category_id)
-    db_service_url = f"{config.DB_API_BASE_PATH}/categories/category"
-    async with config.client_session.post(db_service_url, data=payload) as response:
-        if response.status != 200:
-            res = await response.json()
-            raise HTTPException(status_code=response.status, detail=res["detail"])
-        data = await response.json()
-        return data

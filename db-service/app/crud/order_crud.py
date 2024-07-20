@@ -120,6 +120,25 @@ class Order_Crud:
             return order
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
+        
+    def update_order_notification_status(self, id, status):
+        try:
+            statement = select(Order).where(Order.order_id == id).where(Order.status == 1)
+            order = self.session.exec(statement).first()
+            
+            if not order:
+                return None
+
+            order.notification_status = int(status)
+            self.session.add(order)
+            self.session.commit()
+            self.session.refresh(order)
+            
+            return order
+        except Exception as e:
+            print(str(e))
+            sys.stdout.flush()
+            raise HTTPException(status_code=500, detail=str(e))
 
     # def update_product(self, product: UpdateProduct, request_id: str):
     #     try:

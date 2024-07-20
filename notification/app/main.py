@@ -2,6 +2,7 @@ from datetime import datetime
 from decimal import Decimal
 import json
 from contextlib import asynccontextmanager
+import sys
 from typing import Annotated, AsyncGenerator
 from aiohttp import ClientSession, TCPConnector
 from fastapi import (
@@ -11,7 +12,7 @@ from fastapi import (
     HTTPException,
 )
 from aiokafka import AIOKafkaProducer  # type: ignore
-from app.kafka_consumer import consume_events
+from app.kafka_consumer import consume_events, send_email
 
 from app import config
 from app.operations import get_token
@@ -21,6 +22,7 @@ from shared.models.category import (
     PublicCategory,
     UpdateCategory,
 )
+from shared.models.notification import CreateNotification
 from shared.models.token import TokenData
 import asyncio
 
@@ -50,3 +52,13 @@ router = APIRouter(
 @app.get("/")
 def check():
     return {"message": "Hello World from notification"}
+
+@app.post("/send_email")
+async def send_notification(info:CreateNotification):
+    try:
+        await send_email(info)
+    except Exception as e:
+        print(str(e))
+        sys.stdout.flush()
+        raise HTTPException(status_code=500, detail=str(e)) from e
+    return {"message": "Email sent successfully"}

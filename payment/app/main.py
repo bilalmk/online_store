@@ -89,14 +89,7 @@ class CustomJSONEncoder(json.JSONEncoder):
 
 
 async def make_payment(token: TokenData, payment_info: PaymentInfo):
-    payment_status = PaymentStatus()
-    payment_status.status = True
-    payment_status.message = PaymentSuccessStatus(
-        transaction_id="80022244231",
-        response_code=1,
-        message_code=1,
-        message="This transaction has been approved.",)
-    return payment_status
+
     # =========================================================================================
     # VALIDATE USER ID
     # =========================================================================================
@@ -136,6 +129,20 @@ async def make_payment(token: TokenData, payment_info: PaymentInfo):
     # ATTACHED PRODUCT NAME WITH ORDER DETAIL USING PRODUCT ID
     for order_detail in order_info.order_details:
         order_detail.product_name = product_dict[order_detail.product_id]
+
+    # ========================================
+    # Testing Data
+    # =========================================
+    # payment_status = PaymentStatus()
+    # payment_status.status = True
+
+    # payment_status.message = PaymentSuccessStatus(
+    #     transaction_id="80022244231",
+    #     response_code=1,
+    #     message_code=1,
+    #     message="This transaction has been approved.",)
+
+    # return payment_status,order_info,customer_info
 
     # =========================================================================================
     # CREATE PAYMENT TRANSACTION
@@ -247,10 +254,8 @@ async def make_payment(token: TokenData, payment_info: PaymentInfo):
             if hasattr(response.transactionResponse, "messages") is True:
                 message = PaymentSuccessStatus()
                 message.transaction_id = str(response.transactionResponse.transId)
-                message.response_code = str(response.transactionResponse.responseCode)  # type: ignore
-                message.message_code = str(
-                    response.transactionResponse.messages.message[0].code
-                )  # type: ignore
+                message.response_code = int(response.transactionResponse.responseCode)  # type: ignore
+                message.message_code = int(response.transactionResponse.messages.message[0].code)  # type: ignore
                 message.message = str(
                     response.transactionResponse.messages.message[0].description
                 )
@@ -264,12 +269,8 @@ async def make_payment(token: TokenData, payment_info: PaymentInfo):
 
                 if hasattr(response.transactionResponse, "errors"):
                     message.is_error = True
-                    message.error_code = response.transactionResponse.errors.error[
-                        0
-                    ].errorCode
-                    message.error_message = response.transactionResponse.errors.error[
-                        0
-                    ].errorText
+                    message.error_code = int(response.transactionResponse.errors.error[0].errorCode)
+                    message.error_message = response.transactionResponse.errors.error[0].errorText
 
                 payment_status.status = False
                 payment_status.message = message
@@ -283,14 +284,10 @@ async def make_payment(token: TokenData, payment_info: PaymentInfo):
             if hasattr(response, "transactionResponse") and hasattr(
                 response.transactionResponse, "errors"
             ):
-                message.error_code = str(
-                    response.transactionResponse.errors.error[0].errorCode
-                )  # type: ignore
-                message.error_message = str(
-                    response.transactionResponse.errors.error[0].errorText
-                )
+                message.error_code = int(response.transactionResponse.errors.error[0].errorCode)
+                message.error_message = str(response.transactionResponse.errors.error[0].errorText)
             else:
-                message.error_code = str(response.messages.message[0]["code"].text)  # type: ignore
+                message.error_code = int(response.messages.message[0]["code"].text)  # type: ignore
                 message.error_message = str(response.messages.message[0]["text"].text)
 
             payment_status.status = False
@@ -357,39 +354,26 @@ async def process_payment(
     producer: Annotated[AIOKafkaProducer, Depends(get_kafka_producer)],
     token: Annotated[TokenData, Depends(get_token)],
 ):
-    # payment_status, order_info, customer_info = await make_payment(token, payment_info)
-    payment_status = await make_payment(token, payment_info)
+    payment_status, order_info, customer_info = await make_payment(token, payment_info)
+
+    # testing data
+    # info = CreateNotification(
+    #    client_information=customer_info, order_information=order_info)
+    # return {"status": payment_status.status, "message": payment_status.message}
+
+    # payment_status = await make_payment(token, payment_info)
     if payment_status.status:
         # update payment status
         update_order = await update_payment_status(payment_info.order_id, "paid")
-        # order_info.payment_status = "paid"
-
+        
         # produce create payment data for kafka
         await produce_create_payment(
             payment_info, str(payment_status.message.transaction_id), producer  # type: ignore
         )
 
+        order_info.payment_status = "paid"
         # produce payment data for notification and inventory management
-        # await produce_notification_and_inventory(order_info, customer_info, producer)
-
-        # send data to kafka for create payment
-        # send data to kafka for notification and inventory
-
-    # # check payment_status.status if true then send data to kafka for notification and inventory
-    # if payment_status.status:
-    #     message = {
-    #         "request_id": payment_info.order_id,
-    #         "operation": "create",
-    #         "entity": "order",
-    #         "data": {"status": "paid"},
-    #     }
-
-    #     try:
-    #         obj = json.dumps(message, cls=CustomJSONEncoder).encode("utf-8")
-    #         await producer.send(config.KAFKA_ORDER_TOPIC, value=obj)
-    #         # await asyncio.sleep(10)
-    #     except Exception as e:
-    #         return str(e)
+        await produce_notification_and_inventory(order_info, customer_info, producer)
 
     return payment_status
 

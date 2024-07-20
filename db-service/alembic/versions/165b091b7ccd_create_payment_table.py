@@ -20,6 +20,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
+    op.add_column('orders', sa.Column('notification_status', TINYINT, nullable=False, server_default=sa.text('0'))
     op.create_table(
         'payments',
         sa.Column('id', sa.Integer, autoincrement=True, primary_key=True),

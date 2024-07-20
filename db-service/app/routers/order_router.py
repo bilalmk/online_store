@@ -1,3 +1,4 @@
+import sys
 from shared.models.order import PublicOrder
 from app.config import sessionDep
 from app.crud.order_crud import Order_Crud
@@ -61,3 +62,19 @@ async def update_order_status(
         raise HTTPException(status_code=404, detail="Order not found")
 
     return order
+
+@router.patch("/update_order_notification_status", response_model=PublicOrder)
+async def update_order_notification_status(
+    order_id: int = Form(...),
+    notification_status: int = Form(...),
+    order_crud=Depends(get_order_crud),
+):
+    try:
+        order = order_crud.update_order_notification_status(order_id, notification_status)
+        if not order:
+            raise HTTPException(status_code=404, detail="Order not found")
+
+        return order
+    except Exception as error:
+        print(str(error))
+        sys.stdout.flush()
