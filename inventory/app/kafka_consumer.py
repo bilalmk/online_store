@@ -66,14 +66,17 @@ async def consume_events(topic, group_id):
             request_id = response.get("request_id")
             data = response.get("data")
             order_information = data.get("order_information")
-            await produce_inventory_update(order_information)
+
+            if order_information:
+                await produce_inventory_update(order_information)
     finally:
         # Ensure to close the consumer when done.
         await consumer.stop()
 
 
 async def produce_inventory_update(order_information: PublicOrderWithDetail):
-    inventory_update_info = [{"product_id": info.get("product_id"), "quantity": info.get("quantity")}for info in order_information.get("order_details")]
+    order_details = order_information.get("order_details")
+    inventory_update_info = [{"product_id": info.get("product_id"), "quantity": info.get("quantity")} for info in order_details]
     message = {
         "request_id": order_information.get("order_id"),
         "operation": "update",
