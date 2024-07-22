@@ -1,6 +1,7 @@
 import sys
 
 from fastapi import HTTPException
+from shared.models.inventory import InventoryProductUpdate
 from shared.models.product import CreateProduct, Product, UpdateProduct
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import and_, select
@@ -57,7 +58,9 @@ class Product_Crud:
         try:
 
             statement = (
-                select(Product).where(Product.guid == request_id).where(Product.status == 1)
+                select(Product)
+                .where(Product.guid == request_id)
+                .where(Product.status == 1)
             )
             db_product = self.session.exec(statement).first()
 
@@ -74,7 +77,9 @@ class Product_Crud:
 
     def get_product(self, id):
         try:
-            statement = select(Product).where(Product.id == id).where(Product.status == 1)
+            statement = (
+                select(Product).where(Product.id == id).where(Product.status == 1)
+            )
             product = self.session.exec(statement).first()
             if not product:
                 return None
@@ -84,7 +89,9 @@ class Product_Crud:
 
     def get_product_by_id(self, id):
         try:
-            statement = select(Product).where(Product.id == id).where(Product.status == 1)
+            statement = (
+                select(Product).where(Product.id == id).where(Product.status == 1)
+            )
             product = self.session.exec(statement).first()
             if not product:
                 return None
@@ -99,11 +106,45 @@ class Product_Crud:
             return products
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
-        
+
     def get_products_by_ids(self, ids):
         try:
-            statement = select(Product).where(and_(Product.status == 1, Product.id.in_(ids)))
+            statement = select(Product).where(and_(Product.status == 1, Product.id.in_(ids)))  # type: ignore
             products = self.session.exec(statement).all()
             return products
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
+
+    def update_inventory(self, inventory_info: list[InventoryProductUpdate]):
+        try:
+            # print("update_inventory_db_function")
+            # sys.stdout.flush()
+            # print(inventory_info)
+            # sys.stdout.flush()
+            for info in inventory_info:
+                # print("inside loop")
+                # sys.stdout.flush()
+                # print(info)
+                # sys.stdout.flush()
+                db_product: Product = (
+                    self.session.query(Product)
+                    .filter(Product.id == info.product_id)
+                    .filter(Product.status == 1)
+                    .first()
+                )
+
+                if not db_product:
+                    return {"status": "not-found"}
+
+                db_product.stock_quantity = db_product.stock_quantity - info.quantity
+                self.session.add(db_product)
+
+            self.session.commit()
+            return {"status": "success-update"}
+        except Exception as e:
+            print("execption from crud")
+            sys.stdout.flush()
+            print(str(e))
+            sys.stdout.flush()
+            self.session.rollback()
+            return {"status": "failed-update"}

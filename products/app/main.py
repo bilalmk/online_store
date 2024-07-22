@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime
 from decimal import Decimal
 import json
@@ -8,6 +9,7 @@ from fastapi import APIRouter, FastAPI, Depends, File, Form, HTTPException, Uplo
 from aiokafka import AIOKafkaProducer  # type: ignore
 from app.kafka_producer import get_kafka_producer
 from app.kafka_consumer import (
+    consume_events,
     get_kafka_consumer,
     consume_response_from_kafka,
 )
@@ -32,6 +34,13 @@ from shared.models.token import Token, TokenData
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     print("starting lifespan process")
     config.client_session = ClientSession(connector=TCPConnector(limit=100))
+    
+    await asyncio.sleep(10)
+    asyncio.create_task(
+        consume_events(
+            config.KAFKA_INVENTORY_TOPIC, config.KAFKA_PRODUCT_CONSUMER_GROUP_ID
+        )
+    )
     yield
     await config.client_session.close()
 

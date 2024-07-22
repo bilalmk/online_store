@@ -1,9 +1,9 @@
 import sys
+from shared.models.inventory import InventoryProductUpdate
 from shared.models.product import PublicProduct
 from app.config import sessionDep
 from app.crud.product_crud import Product_Crud
 from fastapi import Depends, HTTPException, APIRouter, Form
-from fastapi import APIRouter
 
 
 def get_product_crud(session: sessionDep) -> Product_Crud:
@@ -44,5 +44,25 @@ async def get_products_by_ids(product_ids: str = Form(...), product_crud=Depends
 
     if not product:
         raise HTTPException(status_code=404, detail="Products not found")
+
+    return product
+
+@router.put("/inventory")
+async def update_inventory(inventory_info: list[InventoryProductUpdate], product_crud=Depends(get_product_crud)):
+    try:
+        # print("inventory_info")
+        # sys.stdout.flush()
+        product = product_crud.update_inventory(inventory_info)
+        # print("product")
+        # sys.stdout.flush()
+        # print(product)
+        # sys.stdout.flush()
+        if not product:
+            raise HTTPException(status_code=404, detail="Product not found")
+    except Exception as e:
+        print("Exception from route")
+        sys.stdout.flush()
+        print(str(e))
+        sys.stdout.flush()
 
     return product

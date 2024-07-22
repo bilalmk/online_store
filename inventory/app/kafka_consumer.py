@@ -1,7 +1,11 @@
 import json
 import asyncio
+import sys
 from aiokafka import AIOKafkaConsumer  # type: ignore
 from app import config
+from app.kafka_producer import get_kafka_producer
+from shared.models.inventory import InventoryProductUpdate
+from shared.models.order_detail_model import PublicOrderWithDetail
 
 responses = {}
 
@@ -11,7 +15,7 @@ async def consume_response_from_kafka(consumer, request_id):
     while True:
         try:
             message = await asyncio.wait_for(consumer.getone(), timeout=5)
-        
+
             response = json.loads(message.value.decode("utf-8"))
             status = response.get("status").get("status")
 
@@ -58,8 +62,31 @@ async def consume_events(topic, group_id):
         # Continuously listen for messages.
         async for message in consumer:
             # create user
-            data = json.loads(message.value.decode("utf-8"))
-            
+            response = json.loads(message.value.decode("utf-8"))
+            request_id = response.get("request_id")
+            data = response.get("data")
+            order_information = data.get("order_information")
+            await produce_inventory_update(order_information)
     finally:
         # Ensure to close the consumer when done.
         await consumer.stop()
+
+
+async def produce_inventory_update(order_information: PublicOrderWithDetail):
+    inventory_update_info = [{"product_id": info.get("product_id"), "quantity": info.get("quantity")}for info in order_information.get("order_details")]
+    message = {
+        "request_id": order_information.get("order_id"),
+        "operation": "update",
+        "entity": "product",
+        "data": {"inventory_info": inventory_update_info},
+    }
+
+    try:
+        async with get_kafka_producer() as producer:
+            obj = json.dumps(message).encode("utf-8")
+            await producer.send(config.KAFKA_INVENTORY_TOPIC, value=obj)
+        # await asyncio.sleep(10)
+    except Exception as e:
+        print(str(e))
+        sys.stdout.flush()
+        return str(e)

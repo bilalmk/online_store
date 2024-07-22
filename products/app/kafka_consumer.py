@@ -2,6 +2,7 @@ import json
 import asyncio
 from aiokafka import AIOKafkaConsumer  # type: ignore
 from app import config
+from app.operations import update_product_inventory
 
 responses = {}
 
@@ -42,7 +43,29 @@ async def consume_response_from_kafka(consumer, request_id):
             return {"message": "No messages received."}
             break  # or continue, based on your use case
 
+async def consume_events(topic, group_id):
+    # Create a consumer instance.
+    consumer = AIOKafkaConsumer(
+        topic,
+        bootstrap_servers=str(config.BOOTSTRAP_SERVER),
+        group_id=group_id,
+        auto_offset_reset="earliest",
+    )
 
+    # Start the consumer.
+    await consumer.start()
+    try:
+        # Continuously listen for messages.
+        async for message in consumer:
+            # create user
+            response = json.loads(message.value.decode("utf-8"))
+            request_id = response.get("request_id")
+            data = response.get("data")
+            await update_product_inventory(data)
+    finally:
+        # Ensure to close the consumer when done.
+        await consumer.stop()
+        
 async def get_kafka_consumer():
     consumer = AIOKafkaConsumer(
         config.KAFKA_PRODUCTS_DB_RESPONSE,
