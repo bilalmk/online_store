@@ -62,7 +62,8 @@ services:
       - ./db-service:/code
       - ./shared:/code/shared
     depends_on:
-      - mysql
+      #- mysql
+      - postgres
       - broker
     ports:
       - "8013:8000"
@@ -195,7 +196,18 @@ services:
       - mysql-data:/var/lib/mysql
       - ./mysql-init:/docker-entrypoint-initdb.d
 
-  
+  postgres:
+    image: postgres:latest  # Use the official PostgreSQL image
+    restart: always
+    container_name: PostgresCont
+    environment:
+        - POSTGRES_USER=imtiaz
+        - POSTGRES_PASSWORD=as
+        - POSTGRES_DB=imtiaz
+    ports:
+        - '5433:5432'
+    volumes:
+        - postgres_db:/var/lib/postgresql/data
 
   curl-test:
     image: curlimages/curl:latest
@@ -213,6 +225,9 @@ volumes:
   mysql-data:
     driver: local
 
+  postgres_db:
+    driver: local
+    
   shared-data:
     driver: local
     driver_opts:

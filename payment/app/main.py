@@ -109,7 +109,7 @@ async def make_payment(token: TokenData, payment_info: PaymentInfo):
     customer_info = User.model_validate(customer_instance)
 
     # GET IDS OF PRODUCTS IN ORDER DETAIL
-    product_ids = [str(product["id"]) for product in order_info.get("order_details")]
+    product_ids = [str(product["product_id"]) for product in order_info.get("order_details")]
     product_ids_str = ",".join(product_ids)
 
     # GET PRODUCTS DETAIL USING IDS IN ORDER DETAIL
@@ -125,7 +125,7 @@ async def make_payment(token: TokenData, payment_info: PaymentInfo):
     # order_detail_instance = PublicOrderDetail(order_detail[0])
     order_instance = PublicOrderWithDetail(**order_info)
     order_info = PublicOrderWithDetail.model_validate(order_instance)
-
+    
     # ATTACHED PRODUCT NAME WITH ORDER DETAIL USING PRODUCT ID
     for order_detail in order_info.order_details:
         order_detail.product_name = product_dict[order_detail.product_id]
