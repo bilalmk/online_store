@@ -96,7 +96,7 @@ async def create(
     return status_message
 
 @router.get("/order/{order_id}", response_model=PublicOrder)
-async def read_order_by_id(order_id:str):
+async def read_order_by_id(order_id: str):
     order = await get_order(order_id)
     return order
 

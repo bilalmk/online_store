@@ -7,7 +7,7 @@ Create Date: 2024-06-27 20:35:24.801393
 """
 
 from typing import Sequence, Union
-#from sqlalchemy.dialects.mysql import DECIMAL
+# from sqlalchemy.dialects.mysql import DECIMAL, TINYINT
 from alembic import op  # type: ignore
 import sqlalchemy as sa
 
@@ -33,7 +33,7 @@ def upgrade() -> None:
         sa.Column("address", sa.String(255)),
         sa.Column("phone_number", sa.String(20)),
         sa.Column("guid", sa.CHAR(36), nullable=False),
-        sa.Column("status", sa.SMALLINT, nullable=False, server_default=sa.text('1')),
+        sa.Column("status", sa.SMALLINT, nullable=False, server_default=sa.text("1")),
         sa.Column(
             "created_at", sa.TIMESTAMP, server_default=sa.func.current_timestamp()
         ),
@@ -65,7 +65,7 @@ def upgrade() -> None:
         sa.Column(
             "created_at", sa.TIMESTAMP, server_default=sa.func.current_timestamp()
         ),
-        sa.Column("status", sa.SMALLINT, nullable=False, server_default="1")
+        sa.Column("status", sa.SMALLINT, nullable=False, server_default=sa.text("1"))
     )
 
     # Creating table `categories`
@@ -82,7 +82,7 @@ def upgrade() -> None:
         sa.Column(
             "created_at", sa.TIMESTAMP, server_default=sa.func.current_timestamp()
         ),
-        sa.Column("status", sa.SMALLINT, nullable=False, server_default="1")
+        sa.Column("status", sa.SMALLINT, nullable=False, server_default=sa.text("1"))
     )
 
     # Creating table `orderitems`

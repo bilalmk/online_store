@@ -9,7 +9,7 @@ from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
-#from sqlalchemy.dialects.mysql import TINYINT
+# from sqlalchemy.dialects.mysql import TINYINT
 
 
 # revision identifiers, used by Alembic.
@@ -20,7 +20,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.add_column('orders', sa.Column('notification_status', sa.SMALLINT, nullable=False, server_default=sa.text('0')))
+    # op.add_column('orders', sa.Column('notification_status', sa.SMALLINT, nullable=False, server_default=sa.text('0')))
     op.create_table(
         'payments',
         sa.Column('id', sa.Integer, autoincrement=True, primary_key=True),

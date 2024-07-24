@@ -33,7 +33,7 @@ async def get_token(token: Annotated[str, Depends(oauth2_authentication)]):
 
     token_data: TokenData = await get_token_data(token)
 
-    if not token_data:
+    if not token_data or token_data.get("user_type") != "user":
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
         )

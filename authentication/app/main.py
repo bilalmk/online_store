@@ -1,3 +1,4 @@
+import sys
 from typing import Annotated
 from shared.models.token import Token
 from fastapi.security import OAuth2PasswordBearer
@@ -11,14 +12,14 @@ app = FastAPI()
 
 
 @app.post("/generate_token", response_model=Token)
-def login(username: str = Form(...), id: int = Form(...)):
+def login(username: str = Form(...), id: int = Form(...), user_type: str = Form(...)):
     try:
         access_token_expires = timedelta(minutes=config.ACCESS_TOKEN_EXPIRE_MINUTES)
         access_token = create_access_token(
-            data={"sub": username, "userid": id}, expires_delta=access_token_expires
+            data={"sub": username, "userid": id, "user_type": user_type}, expires_delta=access_token_expires
         )
 
-        return Token(access_token=access_token, token_type="bearer", user_name=username)
+        return Token(access_token=access_token, token_type="bearer", user_name=username, user_type=user_type)
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_200_OK,
@@ -60,9 +61,12 @@ def decode_access_token(token: str):
 
     try:
         payload = jwt.decode(token, config.SECRET_KEY, algorithms=[config.ALGORITHM])
+        print(payload)
+        sys.stdout.flush()
         username = str(payload.get("sub"))
         userid = str(payload.get("userid"))
         guid = str(payload.get("guid"))
+        user_type = str(payload.get("user_type"))
 
         if username is None:
             raise credentials_exception
@@ -72,4 +76,4 @@ def decode_access_token(token: str):
     except JWTError:
         raise credentials_exception
 
-    return {"username": username, "userid": userid, "guid": guid}
+    return {"username": username, "userid": userid, "guid": guid, "user_type": user_type}
