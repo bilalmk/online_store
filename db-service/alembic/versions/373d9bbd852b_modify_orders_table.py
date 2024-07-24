@@ -16,7 +16,7 @@ revision: str = '373d9bbd852b'
 down_revision: Union[str, None] = '629325b89c3e'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
-from sqlalchemy.dialects.mysql import TINYINT
+# from sqlalchemy.dialects.mysql import TINYINT
 
 
 
@@ -30,7 +30,7 @@ def upgrade() -> None:
     op.add_column('orders', sa.Column('delivery_date', sa.TIMESTAMP, nullable=True))
     op.add_column('orders', sa.Column('delivery_status', sa.String(50), nullable=False, server_default='pending'))
     op.add_column('orders', sa.Column('order_status', sa.String(50), nullable=False, server_default='process'))
-    op.add_column('orders', sa.Column('notification_status', TINYINT, nullable=False, server_default=sa.text('1')))
+    op.add_column('orders', sa.Column('notification_status', sa.SMALLINT, nullable=False, server_default=sa.text('1')))
     
     # op.alter_column('orders', 'status', existing_type=sa.String(50), nullable=False, server_default='pending')
     
