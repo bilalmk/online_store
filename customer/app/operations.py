@@ -1,25 +1,24 @@
-import sys
 from app import config
 import json
 from fastapi import Depends, HTTPException, status
 import aiohttp
-from shared.models.user import User,PublicUser
-from shared.models.token import TokenData
+from shared.models.customer import Customer, PublicCustomer
+from shared.models.token import CustomerTokenData
 from fastapi.security import OAuth2PasswordBearer
 from typing import Annotated, AsyncGenerator
 
 oauth2_authentication = OAuth2PasswordBearer(tokenUrl="token")
 
 
-async def authenticate_user(username: str, password: str):
+async def authenticate_customer(username: str, password: str):
     """
-        This function sends a POST request to a user authentication endpoint to the db-service micorservice 
+        This function sends a POST request to a customer authentication endpoint to the db-service micorservice 
         with provided username and password, handling response status codes accordingly.
     """
     payload = {"username": username, "password": password}
     headers = {"Content-Type": "application/json"}
     async with config.client_session.post(
-        f"{config.DB_API_BASE_PATH}/users/login",
+        f"{config.DB_API_BASE_PATH}/customers/login",
         data=json.dumps(payload),
         headers=headers,
     ) as response:
@@ -31,16 +30,16 @@ async def authenticate_user(username: str, password: str):
         return data
 
 
-async def get_user(userid: int):
+async def get_customer(customer_id: int):
     """
-        This function sends a POST request to a db-service microservice to retrieve user data based on the
-        provided user ID.
+        This function sends a POST request to a db-service microservice to retrieve customer data based on the
+        provided customer ID.
     """
     payload = aiohttp.FormData()
-    payload.add_field("userid", userid)
+    payload.add_field("customer_id", customer_id)
 
     async with config.client_session.post(
-        f"{config.DB_API_BASE_PATH}/users/user",
+        f"{config.DB_API_BASE_PATH}/customers/customer",
         data=payload,
     ) as response:
         if response.status != 200:
@@ -49,11 +48,11 @@ async def get_user(userid: int):
         data = await response.json()
         return data
     
-async def get_user_list():
+async def get_customer_list():
     """
-        This function sends a GET request to a db-service microservice to retrieve list of users.    
+        This function sends a GET request to a db-service microservice to retrieve list of customers.    
     """
-    db_service_url = f"{config.DB_API_BASE_PATH}/users/"
+    db_service_url = f"{config.DB_API_BASE_PATH}/customers/"
     async with config.client_session.get(db_service_url) as response:
         data = await response.json()
         print(data)
@@ -63,17 +62,17 @@ async def get_user_list():
         return data
 
 
-async def create_token(user: PublicUser):
+async def create_token(customer: PublicCustomer):
     """
-        This function creates a token for a user by sending a POST request to an generate_token
+        This function creates a token for a customer by sending a POST request to an generate_token
         endpoint of authentication microservice.
     """
     payload = aiohttp.FormData()
-    payload.add_field("username", user.username)
-    payload.add_field("id", user.id)
-    payload.add_field("guid", user.guid)
-    payload.add_field("user_type", "user")
-    
+    payload.add_field("username", customer.username)
+    payload.add_field("id", customer.id)
+    payload.add_field("guid", customer.guid)
+    payload.add_field("user_type", "customer")
+
     async with config.client_session.post(
         f"{config.AUTH_API_BASE_PATH}/generate_token", data=payload
     ) as response:
@@ -87,7 +86,7 @@ async def create_token(user: PublicUser):
 async def get_token_data(token: str):
     """
     This function sends a POST request to an get_token_data endpoint of authentication microservice
-    to retrieve user-date inside the token.
+    to retrieve customer-date inside the token.
     """
     payload = aiohttp.FormData()
     payload.add_field("token", token)
@@ -100,9 +99,9 @@ async def get_token_data(token: str):
         data = await response.json()
         return data
     
-async def get_current_user(token: Annotated[str, Depends(oauth2_authentication)]):
+async def get_current_customer(token: Annotated[str, Depends(oauth2_authentication)]):
     """
-        This function retrieves the current user based on the provided token after
+        This function retrieves the current customer based on the provided token after
         validating the credentials.
     """
     credentials_exception = HTTPException(
@@ -111,26 +110,26 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_authentication)]
         headers={"WWW-Authenticate": "Bearer"},
     )
 
-    token_data: TokenData = await get_token_data(token)
+    token_data: CustomerTokenData = await get_token_data(token)
 
-    if not token_data or token_data.get("user_type") != "user":
+    if not token_data:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
         )
-    token_data = TokenData.model_validate(token_data)
+    token_data = CustomerTokenData.model_validate(token_data)
     
-    user = await get_user(token_data.userid)
+    customer = await get_customer(token_data.customer_id)
     
-    if user is None:
+    if customer is None:
         raise credentials_exception
 
-    return PublicUser.model_validate(user)
+    return PublicCustomer.model_validate(customer)
 
 
-def get_current_active_user(current_user: Annotated[User, Depends(get_current_user)]):
+def get_current_active_customer(current_customer: Annotated[Customer, Depends(get_current_customer)]):
     """
-        This function retrieves the current active user and raises an exception if the user status is 0 or inactive.   
+        This function retrieves the current active customer and raises an exception if the customer status is 0 or inActive.   
     """
-    if current_user.status == 0:
-        raise HTTPException(status_code=400, detail="Inactive user")
-    return current_user
+    if current_customer.status == 0:
+        raise HTTPException(status_code=400, detail="Inactive customer")
+    return current_customer

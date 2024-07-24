@@ -17,6 +17,7 @@ from app.routers import (
     brand_router,
     order_router,
     payment_router,
+    customer_router
 )
 
 
@@ -37,6 +38,11 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     print("starting lifespan process")
 
     await asyncio.sleep(10)
+    
+    asyncio.create_task(
+        consume_events(config.KAFKA_CUSTOMER_TOPIC, config.KAFKA_CUSTOMER_CONSUMER_GROUP_ID)
+    )
+    
     asyncio.create_task(
         consume_events(config.KAFKA_USER_TOPIC, config.KAFKA_USER_CONSUMER_GROUP_ID)
     )
@@ -53,10 +59,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     asyncio.create_task(
         consume_events(config.KAFKA_BRAND_TOPIC, config.KAFKA_BRAND_CONSUMER_GROUP_ID)
     )
+    
     asyncio.create_task(
-        consume_events(
-            config.KAFKA_ORDER_WITH_DETAIL_TOPIC, config.KAFKA_ORDER_CONSUMER_GROUP_ID
-        )
+        consume_events(config.KAFKA_ORDER_WITH_DETAIL_TOPIC, config.KAFKA_ORDER_CONSUMER_GROUP_ID)
     )
 
     asyncio.create_task(run_alembic_upgrade())
@@ -75,6 +80,7 @@ app.include_router(category_router.router)
 app.include_router(brand_router.router)
 app.include_router(order_router.router)
 app.include_router(payment_router.router)
+app.include_router(customer_router.router)
 
 
 @app.get("/health")

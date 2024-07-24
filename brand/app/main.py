@@ -16,7 +16,7 @@ from app import config
 from app.operations import get_token, get_brand_list, get_brand
 from shared.models.brand import CreateBrand, PublicBrand, UpdateBrand
 from shared.models.token import TokenData
-from app.exceptions.handler import validation_exception_handler,http_exception_handler
+from app.exceptions.handler import validation_exception_handler, http_exception_handler
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.exceptions import RequestValidationError
 
@@ -143,9 +143,7 @@ async def delete_brand(
 
         consumer = await get_kafka_consumer()
         try:
-            status_message = await consume_response_from_kafka(
-                consumer, brand_guid_id
-            )
+            status_message = await consume_response_from_kafka(consumer, brand_guid_id)
         finally:
             await consumer.stop()
 
@@ -169,5 +167,6 @@ async def get_brands():
 async def read_brand_by_id(brand_id: int):
     brand = await get_brand(brand_id)
     return brand
+
 
 app.include_router(router)

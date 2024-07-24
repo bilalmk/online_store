@@ -31,12 +31,19 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     print("starting lifespan process")
     # await asyncio.sleep(10)
     # task = asyncio.create_task(consume_events(config.KAFKA_USER_DB_RESPONSE))
+    
+    # The line `config.client_session = ClientSession(connector=TCPConnector(limit=100))` is creating
+    # an instance of `ClientSession` with a `TCPConnector` that has a limit of 100 connections. This
+    # is used to manage connections to external services. The `limit=100` parameter sets the maximum number of simultaneous
+    # connections that can be made using this `ClientSession`. This helps in controlling the number of
+    # connections and managing resources efficiently when interacting with external services.
     config.client_session = ClientSession(connector=TCPConnector(limit=100))
     yield
     await config.client_session.close()
 
 
 app = FastAPI(lifespan=lifespan, title="Hello World API with DB")
+
 router = APIRouter(
     prefix="/users",
     tags=["users"],
@@ -52,12 +59,22 @@ async def root():
 
 @app.post("/user/authentication")
 async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
+    
+    """this function is calling from operations file. this is authenticating the user calling user login end-point from db-service"""
     user: PublicUser = await authenticate_user(form_data.username, form_data.password)
     user = PublicUser.model_validate(user)
+
+    """calling authentication microservice to generate the token for existing user"""
     token = await create_token(user)
     return token
 
 
+"""
+- Endpoint to create a new user in the system
+- produce data to kafka topic, this topic is consumed by db-service
+- db-service will produce response to kafka topic, this topic is consumed back by this api
+- consumed response will be sent back to the user
+"""
 @app.post("/users/create")
 async def create(
     user: CreateUser, producer: Annotated[AIOKafkaProducer, Depends(get_kafka_producer)]
@@ -77,6 +94,10 @@ async def create(
     # raise HTTPException(status_code=500, detail="No response from db-service")
     consumer = await get_kafka_consumer()
     try:
+        """
+        get response back of usercreate end point of db-service, 
+        responsible to get topic data perform db operation and sent status back to parent endpoint
+        """
         status_message = await consume_response_from_kafka(consumer, user.guid)
     finally:
         await consumer.stop()
@@ -89,6 +110,11 @@ async def create(
 
 
 # =================================== Protected Routes =======================================
+"""
+- Endpoint to get the list of all users in the system
+- this endpoint is protected and can only be accessed by authenticated users
+- this endpoint calls db-service to get the list of users
+"""
 @router.get("/", response_model=list[PublicUser])
 async def get_users():
     list = await get_user_list()
@@ -102,6 +128,11 @@ async def call_db_service():
         return await response.json()
 
 
+"""
+- Endpoint to get the current login user
+- this endpoint is protected and can only be accessed by authenticated users
+- this endpoint calls db-service to get the login user data
+"""
 @router.get("/me", response_model=PublicUser)
 async def read_users_me(
     current_user: Annotated[User, Depends(get_current_active_user)]
@@ -109,6 +140,13 @@ async def read_users_me(
     return current_user
 
 
+"""
+- Endpoint to is enabled the logged-in user to update his data
+- this endpoint is protected and can only be accessed by authenticated users
+- this endpoint produce the data to kafka topic, this topic is consumed by db-service
+- db-service will produce response to kafka topic, this topic is consumed back by this api
+- consumed response will be sent back to the user
+"""
 @router.patch("/update/{user_guid_id}")
 async def update_user(
     user: UpdateUser,
@@ -142,6 +180,11 @@ async def update_user(
 
     consumer = await get_kafka_consumer()
     try:
+        """
+        get response back from db-service, 
+        db-service is responsible to collect topic data 
+        perform db operation and produce response data to kafka topic        
+        """
         status_message = await consume_response_from_kafka(consumer, user_guid_id)
     finally:
         await consumer.stop()
@@ -153,6 +196,13 @@ async def update_user(
     return status_message
 
 
+"""
+- Endpoint to is use to soft delete the user from db
+- this endpoint is protected and can only be accessed by authenticated users
+- this endpoint produce the data to kafka topic, this topic is consumed by db-service
+- db-service will produce response to kafka topic, this topic is consumed back by this api
+- consumed response will be sent back to the user
+"""
 @router.delete("/delete/{user_guid_id}")
 async def delete_user(
     user_guid_id: str,

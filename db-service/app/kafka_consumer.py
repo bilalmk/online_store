@@ -9,6 +9,7 @@ from app.operation.user_operation import UserOperation
 from app.operation.category_operation import CategoryOperation
 from app.operation.brand_operation import BrandOperation
 from app.operation.order_operation import OrderOperation
+from app.operation.customer_operation import CustomerOperation
 
 
 async def consume_events(topic, group_id):
@@ -27,6 +28,9 @@ async def consume_events(topic, group_id):
         async for message in consumer:
             # create user
             data = json.loads(message.value.decode("utf-8"))
+            if message.topic == "customers":
+                t = CustomerOperation(data)
+                await t.operations()
             if message.topic == "users":
                 t = UserOperation(data)
                 await t.operations()

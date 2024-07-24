@@ -168,7 +168,21 @@ services:
       - db-service
       - payment
     ports:
-      - "8020:8000"      
+      - "8020:8000"
+
+  customer:
+    container_name: customer
+    build:
+      context: ./customer
+      dockerfile: Dockerfile
+    volumes:
+      - ./customer:/code
+      - ./shared:/code/shared
+    depends_on:
+      - broker
+      - db-service
+    ports:
+      - "8021:8000"
   
   kafka-ui:
     image: provectuslabs/kafka-ui

@@ -8,8 +8,6 @@ from datetime import datetime
 
 responses = {}
 
-
-
 async def consume_response_from_kafka(consumer, request_id):
     """
     The function consumes messages from a Kafka consumer and processes the response based on the status
@@ -33,23 +31,23 @@ async def consume_response_from_kafka(consumer, request_id):
         
         if response.get("request_id") == request_id:
             if status == "success":
-                message = "User created successfully"
+                message = "Customer created successfully"
             elif status == "duplicate":
                 message = "Record already exists"
             elif status == "exist":
-                message = "User already exists"
+                message = "Customer already exists"
             elif status == "failed":
-                message = "Failed to create user"
+                message = "Failed to create Customer"
             elif status == "not-found":
-                message = "User not found"
+                message = "Customer not found"
             elif status == "success-update":
-                message = "User update successfully"
+                message = "Customer update successfully"
             elif status == "failed-update":
-                message = "Failed to update user"
+                message = "Failed to update customer"
             elif status == "success-delete":
-                message = "User deleted successfully"
+                message = "Customer deleted successfully"
             elif status == "failed-delete":
-                message = "Failed to delete user"
+                message = "Failed to delete customer"
 
             return {"message": message}
         # raise HTTPException(status_code=500, detail="No response from db-service")
@@ -58,9 +56,9 @@ async def consume_response_from_kafka(consumer, request_id):
 """create and return kafka consumer"""
 async def get_kafka_consumer():
     consumer = AIOKafkaConsumer(
-        config.KAFKA_USER_DB_RESPONSE,
+        config.KAFKA_CUSTOMER_DB_RESPONSE,
         bootstrap_servers=str(config.BOOTSTRAP_SERVER),
-        group_id=config.KAFKA_USER_CONSUMER_GROUP_ID,
+        group_id=config.KAFKA_CUSTOMER_CONSUMER_GROUP_ID,
         auto_offset_reset="earliest",
     )
     await consumer.start()
