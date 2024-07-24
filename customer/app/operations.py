@@ -12,8 +12,8 @@ oauth2_authentication = OAuth2PasswordBearer(tokenUrl="token")
 
 async def authenticate_customer(username: str, password: str):
     """
-        This function sends a POST request to a customer authentication endpoint to the db-service micorservice 
-        with provided username and password, handling response status codes accordingly.
+    This function sends a POST request to a customer authentication endpoint to the db-service micorservice 
+    with provided username and password, handling response status codes accordingly.
     """
     payload = {"username": username, "password": password}
     headers = {"Content-Type": "application/json"}
@@ -32,8 +32,8 @@ async def authenticate_customer(username: str, password: str):
 
 async def get_customer(customer_id: int):
     """
-        This function sends a POST request to a db-service microservice to retrieve customer data based on the
-        provided customer ID.
+    This function sends a POST request to a db-service microservice to retrieve customer data based on the
+    provided customer ID.
     """
     payload = aiohttp.FormData()
     payload.add_field("customer_id", customer_id)
@@ -50,7 +50,7 @@ async def get_customer(customer_id: int):
     
 async def get_customer_list():
     """
-        This function sends a GET request to a db-service microservice to retrieve list of customers.    
+    This function sends a GET request to a db-service microservice to retrieve list of customers.    
     """
     db_service_url = f"{config.DB_API_BASE_PATH}/customers/"
     async with config.client_session.get(db_service_url) as response:
@@ -64,8 +64,8 @@ async def get_customer_list():
 
 async def create_token(customer: PublicCustomer):
     """
-        This function creates a token for a customer by sending a POST request to an generate_token
-        endpoint of authentication microservice.
+    This function creates a token for a customer by sending a POST request to an generate_token
+    endpoint of authentication microservice.
     """
     payload = aiohttp.FormData()
     payload.add_field("username", customer.username)
@@ -101,8 +101,8 @@ async def get_token_data(token: str):
     
 async def get_current_customer(token: Annotated[str, Depends(oauth2_authentication)]):
     """
-        This function retrieves the current customer based on the provided token after
-        validating the credentials.
+    This function retrieves the current customer based on the provided token after
+    validating the credentials.
     """
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -128,7 +128,8 @@ async def get_current_customer(token: Annotated[str, Depends(oauth2_authenticati
 
 def get_current_active_customer(current_customer: Annotated[Customer, Depends(get_current_customer)]):
     """
-        This function retrieves the current active customer and raises an exception if the customer status is 0 or inActive.   
+    This function retrieves the current active customer and raises an exception 
+    if the customer status is 0 or inActive.   
     """
     if current_customer.status == 0:
         raise HTTPException(status_code=400, detail="Inactive customer")

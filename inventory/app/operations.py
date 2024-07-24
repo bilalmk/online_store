@@ -9,6 +9,10 @@ oauth2_authentication = OAuth2PasswordBearer(tokenUrl="token")
 
 
 async def get_token_data(token: str):
+    """
+    This function sends a POST request to an get_token_data endpoint of authentication microservice
+    to retrieve user-date inside the token.
+    """
     payload = aiohttp.FormData()
     payload.add_field("token", token)
     async with config.client_session.post(  # type: ignore
@@ -22,6 +26,12 @@ async def get_token_data(token: str):
 
 
 async def get_token(token: Annotated[str, Depends(oauth2_authentication)]):
+    """
+    This function is used to validate the token and ensure that the customer is authenticated.
+    It calls the `get_token_data` function to fetch the token data from the authentication microservice.
+    If the token data is valid and the user type is "customer" not user, it returns the validated `token_data`.
+    Otherwise, it raises an HTTPException with a status code of 401 and a detail message indicating the issue.
+    """
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",

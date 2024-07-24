@@ -8,10 +8,10 @@ from fastapi import APIRouter, FastAPI, Depends, File, Form, HTTPException, Uplo
 from aiokafka import AIOKafkaProducer  # type: ignore
 from app.kafka_producer import get_kafka_producer
 from app.kafka_consumer import (
-    consume_events_order,
+    # consume_events_order,
     consume_events_payment,
     get_kafka_consumer,
-    consume_response_from_kafka,
+    # consume_response_from_kafka,
 )
 
 from app import config
@@ -47,14 +47,37 @@ from authorizenet.apicontrollers import createTransactionController
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    print("starting lifespan process")
+    """
+    The line `config.client_session = ClientSession(connector=TCPConnector(limit=100))` is creating
+    an instance of `ClientSession` with a `TCPConnector` that has a limit of 100 connections. This
+    is used to manage connections to external services. The `limit=100` parameter sets the maximum number of simultaneous
+    connections that can be made using this `ClientSession`. This helps in controlling the number of
+    connections and managing resources efficiently when interacting with external services.
+    """
     config.client_session = ClientSession(connector=TCPConnector(limit=100))
     await asyncio.sleep(10)
+    
+    """
+    The `asyncio.create_task()` function is used to create a task to run a coroutine concurrently in
+    the background without blocking the main execution flow.
+    
+    this will call the consume events order function from kafka_consumer.py file to consume the subscribed 
+    order topic against the order consumer group id
+    
+    this will update the order information in the database after completing the payment process
+    """
     asyncio.create_task(
         consume_events_order(
             config.KAFKA_ORDER_TOPIC, config.KAFKA_ORDER_CONSUMER_GROUP_ID
         )
     )
+    
+    """
+    this will call the consume events payment function from kafka_consumer.py file to consume the subscribed 
+    payment topic against the payment consumer group id
+    
+    this will update the payment information of order in the database
+    """
     asyncio.create_task(
         consume_events_payment(
             config.KAFKA_PAYMENT_TOPIC, config.KAFKA_PAYMENT_CONSUMER_GROUP_ID
@@ -80,6 +103,11 @@ def main():
 
 
 class CustomJSONEncoder(json.JSONEncoder):
+    """ 
+    CustomJSONEncoder is a custom JSON encoder class that extends the default JSON encoder
+    from the Python standard library. It is used to handle special cases when encoding
+    objects like Decimal and datetime.
+    """
     def default(self, obj):
         if isinstance(obj, Decimal):
             return float(obj)
@@ -88,6 +116,10 @@ class CustomJSONEncoder(json.JSONEncoder):
         return super(CustomJSONEncoder, self).default(obj)
 
 
+"""
+    this function will receive order,client and payment information. create the objects accepted by 
+    authorize.net and send final data to authorize.net for payment process.
+"""
 async def make_payment(token: TokenData, payment_info: PaymentInfo):
 
     # =========================================================================================
@@ -298,6 +330,10 @@ async def make_payment(token: TokenData, payment_info: PaymentInfo):
         raise HTTPException(status_code=400, detail="Transaction Failed")
 
 
+"""
+this function will use to produce payment information data to kafka topics and this data will be consumed by
+payment service to record the information in database
+"""
 async def produce_create_payment(
     payment_info: PaymentInfo, transaction_id: str, producer: AIOKafkaProducer
 ):
@@ -325,6 +361,11 @@ async def produce_create_payment(
         return str(e)
 
 
+"""
+this function will use to produce data to kafka topics and this data will be consumed by
+notification and inventory management service to update the product quantity and send notification
+to user about the order
+"""
 async def produce_notification_and_inventory(
     order_info, customer_info, producer: AIOKafkaProducer
 ):
@@ -354,6 +395,7 @@ async def process_payment(
     producer: Annotated[AIOKafkaProducer, Depends(get_kafka_producer)],
     token: Annotated[TokenData, Depends(get_token)],
 ):
+    """ Receive user payment """
     payment_status, order_info, customer_info = await make_payment(token, payment_info)
 
     # testing data
@@ -363,21 +405,24 @@ async def process_payment(
 
     # payment_status = await make_payment(token, payment_info)
     if payment_status.status:
-        # update payment status
+        
+        """ call update_payment_status() function from operations to update the payment status"""
         update_order = await update_payment_status(payment_info.order_id, "paid")
         
-        # produce create payment data for kafka
+        """produce create payment data for kafka"""
         await produce_create_payment(
             payment_info, str(payment_status.message.transaction_id), producer  # type: ignore
         )
 
         order_info.payment_status = "paid"
-        # produce payment data for notification and inventory management
+        
+        """ produce payment data for notification and inventory management"""
         await produce_notification_and_inventory(order_info, customer_info, producer)
 
     return payment_status
 
 
+# TESTING FUNCTION
 @router.post("/pay1")
 async def create(
     producer: Annotated[AIOKafkaProducer, Depends(get_kafka_producer)],

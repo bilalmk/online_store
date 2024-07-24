@@ -33,7 +33,13 @@ from shared.models.token import Token, TokenData
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    print("starting lifespan process")
+    """
+    The line `config.client_session = ClientSession(connector=TCPConnector(limit=100))` is creating
+    an instance of `ClientSession` with a `TCPConnector` that has a limit of 100 connections. This
+    is used to manage connections to external services. The `limit=100` parameter sets the maximum number of simultaneous
+    connections that can be made using this `ClientSession`. This helps in controlling the number of
+    connections and managing resources efficiently when interacting with external services.
+    """
     config.client_session = ClientSession(connector=TCPConnector(limit=100))
     yield
     await config.client_session.close()
@@ -41,6 +47,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
 app = FastAPI(lifespan=lifespan, title="Hello World API with DB")
 
+""" handlers to parse the error before send to user """
 app.add_exception_handler(RequestValidationError, validation_exception_handler)  # type: ignore
 app.add_exception_handler(StarletteHTTPException, http_exception_handler)  # type: ignore
 # app.add_middleware(ExceptionHandlingMiddleware)
@@ -59,6 +66,11 @@ def check():
 
 
 class CustomJSONEncoder(json.JSONEncoder):
+    """ 
+    CustomJSONEncoder is a custom JSON encoder class that extends the default JSON encoder
+    from the Python standard library. It is used to handle special cases when encoding
+    objects like Decimal and datetime.
+    """
     def default(self, obj):
         if isinstance(obj, Decimal):
             return float(obj)
@@ -67,6 +79,13 @@ class CustomJSONEncoder(json.JSONEncoder):
         return super(CustomJSONEncoder, self).default(obj)
 
 
+"""
+- This endpoint is protected and can only be accessed by authenticated system users
+- Endpoint to create a new category
+- produce data to kafka topic, this topic is consumed by db-service
+- db-service will produce response to kafka topic, this topic is consumed back by this api
+- consumed response will be sent back to the caller
+"""
 @router.post("/create")
 async def create(
     category: CreateCategory,
@@ -83,6 +102,10 @@ async def create(
     }
 
     try:
+        """
+        get response back of create category end point of db-service, 
+        responsible to get topic data, perform db operation and sent status back to caller
+        """
         obj = json.dumps(message, cls=CustomJSONEncoder).encode("utf-8")
         await producer.send(config.KAFKA_CATEGORY_TOPIC, value=obj)
         # await asyncio.sleep(10)
@@ -102,6 +125,13 @@ async def create(
     return status_message
 
 
+"""
+- this endpoint is protected and can only be accessed by authenticated system users
+- this endpoint is responsible to update the category data
+- this endpoint produce the data to kafka topic, this topic is consumed by db-service
+- db-service will produce response to kafka topic, this topic is consumed back by this api
+- consumed response will be sent back to the caller
+"""
 @router.patch("/update/{category_guid_id}")
 async def update_category(
     category: UpdateCategory,
@@ -130,6 +160,11 @@ async def update_category(
 
     consumer = await get_kafka_consumer()
     try:
+        """
+        get response back from db-service, 
+        db-service is responsible to collect topic data 
+        perform db operation and produce response data to kafka topic        
+        """
         status_message = await consume_response_from_kafka(consumer, category_guid_id)
     finally:
         await consumer.stop()
@@ -141,6 +176,13 @@ async def update_category(
     return status_message
 
 
+"""
+- this endpoint is protected and can only be accessed by authenticated system users
+- Endpoint is use to soft delete the category from db
+- this endpoint produce the data to kafka topic, this topic is consumed by db-service
+- db-service will produce response to kafka topic, kafka topic is consumed back by this api
+- consumed response will be sent back to the caller
+"""
 @router.delete("/delete/{category_guid_id}")
 async def delete_category(
     category_guid_id: str,
@@ -175,13 +217,21 @@ async def delete_category(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
+"""
+- This endpoint is protected and can only be accessed by authenticated system users
+- call get_category_list function from operation file
+- Retrieves a list of categories and returns it as a response.
+"""
 @router.get("/", response_model=list[PublicCategory])
 async def get_categories():
     list = await get_category_list()
     return list
 
-
+"""
+- This endpoint is protected and can only be accessed by authenticated system users
+- call get_category function from operation file
+- Retrieves and return a category data, based on provided category id.
+"""
 @router.get("/category/{category_id}", response_model=PublicCategory)
 async def read_category_by_id(category_id: int):
     category = await get_category(category_id)

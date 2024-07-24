@@ -36,4 +36,4 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     op.drop_table('payments')
-    op.drop_column('orders', 'notification_status')
+    # op.drop_column('orders', 'notification_status')

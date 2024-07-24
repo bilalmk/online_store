@@ -32,6 +32,13 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     config.client_session = ClientSession(connector=TCPConnector(limit=100))
 
     await asyncio.sleep(10)
+    """
+    The `asyncio.create_task()` function is used to create a task to run a coroutine concurrently in
+    the background without blocking the main execution flow.
+    
+    this will call the consume events function from kafka_consumer.py file to consume the subscribed 
+    notification topic against the notification consumer group id
+    """
     asyncio.create_task(
         consume_events(config.KAFKA_NOTIFICATION_TOPIC, config.KAFKA_NOTIFICATION_CONSUMER_GROUP_ID)
     )
@@ -53,8 +60,15 @@ router = APIRouter(
 def check():
     return {"message": "Hello World from notification"}
 
+"""
+    This function sends an email notification using the information provided in the request body
+    and handles exceptions by returning an error response if the email sending fails.
+    
+    this is the testing end point for sending email notification in actual scenario this email notification
+    will be send by microservice running in back ground 
+"""
 @app.post("/send_email")
-async def send_notification(info:CreateNotification):
+async def send_notification(info: CreateNotification):
     try:
         await send_email(info)
     except Exception as e:

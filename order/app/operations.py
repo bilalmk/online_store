@@ -10,6 +10,10 @@ oauth2_authentication = OAuth2PasswordBearer(tokenUrl="token")
 
 
 async def get_token_data(token: str):
+    """
+    This function sends a POST request to an get_token_data endpoint of authentication microservice
+    to retrieve user-date inside the token.
+    """
     payload = aiohttp.FormData()
     payload.add_field("token", token)
     async with config.client_session.post(  # type: ignore
@@ -23,6 +27,12 @@ async def get_token_data(token: str):
 
 
 async def get_token(token: Annotated[str, Depends(oauth2_authentication)]):
+    """
+    This function is used to validate the token and ensure that the user is authenticated.
+    It calls the `get_token_data` function to fetch the token data from the authentication microservice.
+    If the token data is valid and the user type is "user" not customer, it returns the validated `token_data`.
+    Otherwise, it raises an HTTPException with a status code of 401 and a detail message indicating the issue.
+    """
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -42,71 +52,33 @@ async def get_token(token: Annotated[str, Depends(oauth2_authentication)]):
 
     return token_data
 
-async def get_order(order_id:str):
+
+async def get_order(order_id: str):
+    """
+    This function sends a POST request to a order micro service to retrieve order information
+    based on a given order ID.
+    """
     payload = aiohttp.FormData()
     payload.add_field("order_id", order_id)
     db_service_url = f"{config.DB_API_BASE_PATH}/orders/order"
-    async with config.client_session.post(db_service_url,data=payload) as response:
+    async with config.client_session.post(db_service_url, data=payload) as response:
         if response.status != 200:
             res = await response.json()
             raise HTTPException(status_code=response.status, detail=res["detail"])
         data = await response.json()
         return data
-    
-async def get_order_products(product_ids:str):
+
+
+async def get_order_products(product_ids: str):
+    """
+    This function sends a POST request to a product micro service to retrieve list of products 
+    based on a given product ids.
+    """
     payload = aiohttp.FormData()
     payload.add_field("product_ids", product_ids)
     db_service_url = f"{config.DB_API_BASE_PATH}/products/product_by_ids"
-    async with config.client_session.post(db_service_url,data=payload) as response:
-        if response.status!=200:
+    async with config.client_session.post(db_service_url, data=payload) as response:
+        if response.status != 200:
             return None
         data = await response.json()
         return data
-    
-
-# async def get_order_list():
-#     db_service_url = f"{config.DB_API_BASE_PATH}/orders/"
-#     async with config.client_session.get(db_service_url) as response:
-#         data = await response.json()
-#         if response.status != 200:
-#             raise HTTPException(status_code=response.status, detail=data["detail"])
-#         return data
-    
-    
-# async def get_categories(category_id:int):
-#     payload = aiohttp.FormData()
-#     payload.add_field("category_id",category_id)
-#     db_service_url = f"{config.DB_API_BASE_PATH}/categories/category"
-#     async with config.client_session.post(db_service_url,data=payload) as response:
-#         if response.status != 200:
-#             return None
-#         data = await response.json()
-#         return data
-    
-# async def get_category_list():
-#     db_service_url = f"{config.DB_API_BASE_PATH}/categories/"
-#     async with config.client_session.get(db_service_url) as response:
-#         data = await response.json()
-#         if response.status != 200:
-#             return None
-#         return data
-
-    
-# async def get_brands(brand_id:int):
-#     payload = aiohttp.FormData()
-#     payload.add_field("brand_id",brand_id)
-#     db_service_url = f"{config.DB_API_BASE_PATH}/brands/brand"
-#     async with config.client_session.post(db_service_url,data=payload) as response:
-#         if response.status != 200:
-#             return None
-#         data = await response.json()
-#         return data
-    
-# async def get_brand_list():
-#     db_service_url = f"{config.DB_API_BASE_PATH}/brands/"
-#     async with config.client_session.get(db_service_url) as response:
-#         data = await response.json()
-#         if response.status != 200:
-#             return None
-#         return data
-    

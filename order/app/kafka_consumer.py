@@ -8,12 +8,22 @@ responses = {}
 
 
 async def consume_response_from_kafka(consumer, request_id):
+    """
+    The function consumes messages from a Kafka consumer and process the response based on the status
+    to return a corresponding message.
+
+    receiving data from db-service
+
+    :param consumer: an instance of a Kafka consumer using to consume messages from a Kafka topic
+    :param request_id: Process the response based on the request ID provided
+    :return: returns a dictionary containing a message based on the status of the response received from Kafka.
+    """
     message_count = 0
     while True:
         try:
             message = await asyncio.wait_for(consumer.getone(), timeout=15)
             response = json.loads(message.value.decode("utf-8"))
-            
+
             status = response.get("status")
             order = response.get("order")
             message = "Operation failed"
@@ -38,7 +48,7 @@ async def consume_response_from_kafka(consumer, request_id):
                 elif status == "failed-delete":
                     message = "Failed to delete order"
 
-                return {"message": message,"order":order}
+                return {"message": message, "order": order}
         except asyncio.TimeoutError:
             return {"message": "No messages received."}
             break  # or continue, based on your use case

@@ -7,6 +7,16 @@ responses = {}
 
 
 async def consume_response_from_kafka(consumer, request_id):
+    """
+    The function consumes messages from a Kafka consumer and process the response based on the status
+    to return a corresponding message.
+    
+    receiving data from db-service
+    
+    :param consumer: an instance of a Kafka consumer using to consume messages from a Kafka topic
+    :param request_id: Process the response based on the request ID provided
+    :return: returns a dictionary containing a message based on the status of the response received from Kafka.     
+    """
     message_count = 0
     while True:
         try:

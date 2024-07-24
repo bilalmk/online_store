@@ -234,6 +234,8 @@ services:
       - "5050:80"
     depends_on:
       - postgres
+    volumes:
+      - E:\piaic\projects\db_backup:/var/lib/pgadmin/storage
 
   curl-test:
     image: curlimages/curl:latest

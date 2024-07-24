@@ -22,7 +22,13 @@ from shared.models.token import  TokenData
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    print("starting lifespan process")
+    """
+    The line `config.client_session = ClientSession(connector=TCPConnector(limit=100))` is creating
+    an instance of `ClientSession` with a `TCPConnector` that has a limit of 100 connections. This
+    is used to manage connections to external services. The `limit=100` parameter sets the maximum number of simultaneous
+    connections that can be made using this `ClientSession`. This helps in controlling the number of
+    connections and managing resources efficiently when interacting with external services.
+    """
     config.client_session = ClientSession(connector=TCPConnector(limit=100))
     yield
     await config.client_session.close()
@@ -44,6 +50,11 @@ def main():
 
 
 class CustomJSONEncoder(json.JSONEncoder):
+    """ 
+    CustomJSONEncoder is a custom JSON encoder class that extends the default JSON encoder
+    from the Python standard library. It is used to handle special cases when encoding
+    objects like Decimal and datetime.
+    """
     def default(self, obj):
         if isinstance(obj, Decimal):
             return float(obj)
@@ -52,6 +63,13 @@ class CustomJSONEncoder(json.JSONEncoder):
         return super(CustomJSONEncoder, self).default(obj)
 
 
+"""
+- This endpoint is protected and can only be accessed by authenticated customer
+- Endpoint to create a new order
+- produce data to kafka topic, this topic is consumed by db-service
+- db-service will produce response to kafka topic, kafka topic is consumed back by this api
+- consumed response will be sent back to the caller
+"""
 @router.post("/create")
 async def create(
     order: CreateOrderWithDetail,
@@ -80,6 +98,10 @@ async def create(
 
     consumer = await get_kafka_consumer()
     try:
+        """
+        get response back of create order end point of db-service, 
+        responsible to get topic data, perform db operation and sent status back to caller
+        """
         status_message = await consume_response_from_kafka(consumer, order.guid)
     finally:
         await consumer.stop()
@@ -95,81 +117,16 @@ async def create(
     status_message = {"message": "Created"}
     return status_message
 
+
+"""
+- This endpoint is protected and can only be accessed by authenticated customer
+- call get_order function from operation file
+- Retrieves and return a order data, based on provided order id.
+"""
 @router.get("/order/{order_id}", response_model=PublicOrder)
 async def read_order_by_id(order_id: str):
     order = await get_order(order_id)
     return order
-
-# @router.patch("/update/{product_guid_id}")
-# async def update_product(
-#     product: UpdateProduct,
-#     product_guid_id: str,
-#     producer: Annotated[AIOKafkaProducer, Depends(get_kafka_producer)],
-#     token: Annotated[TokenData, Depends(get_token)],
-# ):
-#     product_data = product.model_dump(exclude_unset=True)
-    
-#     message = {
-#         "request_id": product_guid_id,
-#         "operation": "update",
-#         "entity": "product",
-#         "data": product_data,
-#     }
-
-#     obj = json.dumps(message).encode("utf-8")
-#     await producer.send(config.KAFKA_PRODUCT_TOPIC, value=obj)
-
-#     consumer = await get_kafka_consumer()
-#     try:
-#         status_message = await consume_response_from_kafka(consumer, product_guid_id)
-#     finally:
-#         await consumer.stop()
-
-#     if status_message:
-#         return status_message
-
-#     status_message = {"message": "Try again"}
-#     return status_message
-
-
-# @router.delete("/delete/{order_guid_id}")
-# async def delete_order(
-#     order_guid_id: str,
-#     producer: Annotated[AIOKafkaProducer, Depends(get_kafka_producer)],
-#     token: Annotated[TokenData, Depends(get_token)],
-# ):
-#     try:
-#         message = {
-#             "request_id": order_guid_id,
-#             "operation": "delete",
-#             "entity": "order",
-#             "data": {},
-#         }
-
-#         obj = json.dumps(message).encode("utf-8")
-#         await producer.send(config.KAFKA_ORDER_TOPIC, value=obj)
-
-#         consumer = await get_kafka_consumer()
-#         try:
-#             status_message = await consume_response_from_kafka(consumer, order_guid_id)
-#         finally:
-#             await consumer.stop()
-
-#         if status_message:
-#             return status_message
-
-#         status_message = {"message": "Try again"}
-#         return status_message
-
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))
-
-
-# @router.get("/", response_model=list[PublicOrder])
-# async def get_products(token: Annotated[TokenData, Depends(get_token)]):
-#     orders = await get_order_list(token.user_id)
-#     return orders
-
 
 
 app.include_router(router)

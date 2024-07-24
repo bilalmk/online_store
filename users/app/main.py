@@ -95,12 +95,12 @@ async def create(
     consumer = await get_kafka_consumer()
     try:
         """
-        get response back of usercreate end point of db-service, 
-        responsible to get topic data perform db operation and sent status back to parent endpoint
+            get response back of usercreate end point of db-service, 
+            responsible to get topic data perform db operation and sent status back to parent endpoint
         """
         status_message = await consume_response_from_kafka(consumer, user.guid)
     finally:
-        await consumer.stop()
+        await consumer.stop()   
 
     if status_message:
         return status_message
