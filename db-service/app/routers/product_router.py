@@ -15,7 +15,13 @@ router = APIRouter(
     tags=["products"],
 )
 
+"""
+End-Point receives a product_id as a form input, retrieves the corresponding product
+using a dependency, and returns the product or raises a 404 error if not found
 
+product_crud class is a dependency that is used to interact with product data in the database. 
+it contains methods for retrieving product information
+"""
 @router.post("/product", response_model=PublicProduct)
 async def get_product(
     product_id: int = Form(...), product_crud=Depends(get_product_crud)
@@ -28,6 +34,13 @@ async def get_product(
     return product
 
 
+"""
+End-Point retrieves a list of public products using a dependency and returns them, 
+raising a 404 error if no products are found
+
+product_crud class is a dependency that is used to interact with product data in the database. 
+it contains methods for retrieving product information
+"""
 @router.get("/", response_model=list[PublicProduct])
 async def get_products(product_crud=Depends(get_product_crud)):
     products = product_crud.get_products()
@@ -36,9 +49,17 @@ async def get_products(product_crud=Depends(get_product_crud)):
     return products
 
 
-@router.post("/product_by_ids", response_model=list[PublicProduct])
+"""
+End-Point retrieves a list of public products by their IDs, IDs are receiving in request in comma separated string,
+using a dependency and returns them as response. Raising a 404 error if no products are found
+
+product_crud class is a dependency that is used to interact with product data in the database.
+it contains methods for retrieving product information
+"""
+@router.post("/product_by_ids", response_model=list[PublicProduct])    
 async def get_products_by_ids(product_ids: str = Form(...), product_crud=Depends(get_product_crud)):
 
+    """generate list of ids from comma separated string of input ids"""
     product_ids_list = list(map(int, product_ids.split(",")))
     product = product_crud.get_products_by_ids(product_ids_list)
 
@@ -47,6 +68,17 @@ async def get_products_by_ids(product_ids: str = Form(...), product_crud=Depends
 
     return product
 
+"""
+End-Point updates inventory information using a dependency, for a list of products and handles exceptions by
+returning a 404 status code if the product is not found
+
+product_crud class is a dependency that is used to interact with product data in the database.
+it contains methods for updating product information
+
+This end-point is called from the inventory microservice to update inventory information, after successfully 
+created the order and received its payment
+
+"""
 @router.put("/inventory")
 async def update_inventory(inventory_info: list[InventoryProductUpdate], product_crud=Depends(get_product_crud)):
     try:

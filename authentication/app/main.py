@@ -10,7 +10,10 @@ from jose import JWTError, jwt, ExpiredSignatureError
 oauth2_authentication = OAuth2PasswordBearer(tokenUrl="token")
 app = FastAPI()
 
-
+"""
+This endpoint of authentication microservices is used to creates a token.
+This token is used to authorized the user and allow to access the multiple end-point in different microservices
+"""
 @app.post("/generate_token", response_model=Token)
 def login(username: str = Form(...), id: int = Form(...), user_type: str = Form(...)):
     try:
@@ -28,6 +31,9 @@ def login(username: str = Form(...), id: int = Form(...), user_type: str = Form(
         )
 
 
+"""
+This endpoint of authentication microservices is used to extract user data from existing token.
+"""
 @app.post("/get_token_data")
 def get_token_data(token: str = Form(...)):
     token_data = decode_access_token(token)
@@ -35,6 +41,10 @@ def get_token_data(token: str = Form(...)):
 
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
+    """
+    This function generates an encoded JSON Web Token (JWT)
+    containing the data provided as input along with an expiration time.
+    """
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
@@ -47,6 +57,11 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
 
 
 def decode_access_token(token: str):
+    """
+    This function decodes a given access token using the PyJWT library with the help of a secret key.
+    It extracts information such as username, userid, guid, and user_type from the token
+    payload and returns the decoded payload.
+    """
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",

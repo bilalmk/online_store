@@ -11,14 +11,39 @@ import sys
 from shared.models.order_detail_model import CreateOrderWithDetail
 
 
-class CustomJSONEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, Decimal):
-            return float(obj)
-        elif isinstance(obj, datetime):
-            return obj.isoformat()
-        return super(CustomJSONEncoder, self).default(obj)
+# class CustomJSONEncoder(json.JSONEncoder):
+#     """ 
+#     CustomJSONEncoder is a custom JSON encoder class that extends the default JSON encoder
+#     from the Python standard library. It is used to handle special cases when encoding
+#     objects like Decimal and datetime.
+#     """
+#     def default(self, obj):
+#         if isinstance(obj, Decimal):
+#             return float(obj)
+#         elif isinstance(obj, datetime):
+#             return obj.isoformat()
+#         return super(CustomJSONEncoder, self).default(obj)
 
+"""
+This class will use to handle curd operations for order data.
+- The `__init__` method initializes the class with the provided data and sets the `operation` attribute
+
+- The `operations` method is an asynchronous method that performs the following tasks:
+    - It creates a database session using the `get_session` context manager.
+    - Order_Crud(session)` is creating an instance of the `Order_Crud` class 
+            by passing the `session` object as a parameter to its constructor. 
+            This instance is then used to perform database operations like 
+            creating, updating, or deleting order data in the database.
+    - Based on the `operation` attribute, it calls the appropriate method:
+        - If the operation is 'create', it creates a new order using the `create_order` method of the `Order_Crud` class.        
+    - The result of the operation is stored in the `res` variable.
+    - A response dictionary is created with the:
+        - `request_id`: The ID of the request.
+        - `status`: The status of the operation.
+        - `order`: The order data without order detail.
+    - The response is converted to a JSON string and encoded as UTF-8 bytes.
+    - The `send_producer` function is called asynchronously to send the response to a Kafka producer for further processing.
+"""
 
 class OrderOperation:
     def __init__(self, data):

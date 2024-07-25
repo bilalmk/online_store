@@ -9,13 +9,44 @@ from sqlmodel import select
 
 from shared.models.order_detail_model import CreateOrderWithDetail
 
+"""
+    A class to perform CRUD operations for orders in the database.
 
+    Args:
+        session: The database session to execute queries.
+
+    Methods:
+        create_order(order): Create a new order with details.
+        get_order_by_id(id): Retrieve an order by ID.
+        get_order_by_guid(id): Retrieve an order by GUID.
+        get_orders(customer_id): Retrieve all orders for a specific customer.
+        update_order_payment_status(id, status): Update the payment status of an order.
+        update_order_notification_status(id, status): Update the notification status of an order.
+"""
+
+# The Order_Crud class provides methods to interact with the Order and OrderDetail models in the database. 
+# It includes functionalities to create, retrieve, and update orders.
 class Order_Crud:
 
     def __init__(self, session):
+        # Initializes the class with a database session
         self.session = session
 
+    # Create a new order with details.
     def create_order(self, order: CreateOrderWithDetail):
+        """
+        The function creates a new order in a database, handling cases where the order already exists,
+        encounters integrity errors, or fails for other reasons.
+        
+        The method first checks if a order with the guid
+        already exists in the database. If a order is found, it returns a "exist" status
+        
+        The possible values for the "error" key are :
+        - "True": If a order with the same guid is already exists in the database.
+        - "False": If the order creation process is successful.
+        - "True": If there is an integrity error due to a duplicate entry.
+        - "True": if an exception occurs during the operation
+        """
         try:
             statement = select(Order).where(Order.guid == order.guid)
             result = self.session.exec(statement).first()
@@ -43,12 +74,15 @@ class Order_Crud:
 
             db_order = Order.model_validate(db_order)
 
+            # insert parent order record
             db_order.order_status = "created"
             self.session.add(db_order)
             self.session.commit()
             self.session.refresh(db_order)
 
             db = db_order.dict()
+            
+            # insert order detail record in child table
             for details in order.order_details:
                 details.order_id = db_order.order_id
                 db_detail = OrderDetail.model_validate(details)
@@ -68,7 +102,14 @@ class Order_Crud:
             self.session.rollback()
             return {"error": True, "status": "failed"}
 
+    # Retrieve orders by ID
     def get_order_by_id(self, id):
+        """
+        This function retrieves a order from the database based on the provided order id.
+        
+        It queries the database to find a order with the provided id and a active status
+        return the order object or None if order not found
+        """
         try:
             statement = select(Order).where(Order.order_id == id).where(Order.status == 1)
             order = self.session.exec(statement).first()
@@ -79,8 +120,15 @@ class Order_Crud:
             return order
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
-        
+    
+    # Retrieve orders by GUID
     def get_order_by_guid(self, id):
+        """
+        This function retrieves a order from the database based on the provided order guid.
+        
+        It queries the database to find a order with the provided guid and a active status
+        return the order object or None if order not found
+        """
         try:
             statement = select(Order).where(Order.guid == id).where(Order.status == 1)
             order = self.session.exec(statement).first()
@@ -92,7 +140,15 @@ class Order_Crud:
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
 
+    # Retrieve all orders for a specific customer.
     def get_orders(self, customer_id):
+        """
+        This function retrieves orders with active status for a specific customer ID from a
+        database.
+        
+        It queries the database to find a order for the provided customer id and a active status
+        return the order object or None if order not found or raise 500 error
+        """
         try:
             statement = (
                 select(Order)
@@ -100,11 +156,21 @@ class Order_Crud:
                 .where(Order.customer_id == customer_id)
             )
             orders = self.session.exec(statement).all()
+            
+            if not orders:
+                return None
+            
             return orders
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
-        
+    
+    # Update the payment status of an order
     def update_order_payment_status(self, id, status):
+        """
+        This function is used to updates the payment status of an order in a database.
+        find the order for the provided order id return None if order is not found
+        set the payment status of order and return updated order object or raise 500 error in case of exception
+        """
         try:
             statement = select(Order).where(Order.order_id == id).where(Order.status == 1)
             order = self.session.exec(statement).first()
@@ -120,8 +186,14 @@ class Order_Crud:
             return order
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
-        
+    
+    # Update the notification status of an order.
     def update_order_notification_status(self, id, status):
+        """
+        This function is used to updates the notification status of an order in a database.
+        find the order for the provided order id return None if order is not found
+        set the notification status of order and return updated order object or raise 500 error in case of exception
+        """
         try:
             statement = select(Order).where(Order.order_id == id).where(Order.status == 1)
             order = self.session.exec(statement).first()

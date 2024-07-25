@@ -13,7 +13,15 @@ router = APIRouter(
     tags=["payments"],
 )
 
+"""
+This end point creates a new payment using a payment_crud class dependency and returns the response, 
+handling exceptions by raising appropriate HTTP status codes
 
+payment_crud class is a dependency that is used to interact with payment data in the database. 
+it contains methods for inserting order payment information
+
+This end point will be called from the payment service when an payment process will be completed
+"""
 @router.post("/create")
 async def post_payment(payment: CreatePayment, payment_crud=Depends(get_payment_crud)):
     try:

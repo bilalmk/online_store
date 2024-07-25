@@ -13,6 +13,16 @@ from app.operation.customer_operation import CustomerOperation
 
 
 async def consume_events(topic, group_id):
+    """
+    The function consumes messages from a Kafka consumer and process the response based on the topic value.
+    select the correct operation class on the basis of topic value.
+    
+    All microservices in the system are producing their data to kafka topics for db operations and this consumer of db-service
+    is consuming the messages from topic and sending the data to the respective classes for db crud operations
+    
+    :topic: name of topic which is used my consumer to consumed the messages
+    :group_id: name of group, topics are subscribed for
+    """
     # Create a consumer instance.
     consumer = AIOKafkaConsumer(
         topic,
@@ -47,15 +57,14 @@ async def consume_events(topic, group_id):
                 t = OrderOperation(data)
                 await t.operations()
 
-            #log_message(data.get("data"), message.topic)
+            # log_message(data.get("data"), message.topic)
 
-            # Here you can add code to process each message.
-            # Example: parse the message, store it in a database, etc.
     finally:
         # Ensure to close the consumer when done.
         await consumer.stop()
 
 
+""" Create a log message function to log the errors in text bases log files"""
 def log_message(entity_data, topic):
     # print(f"Received message: {message.value.decode()} on topic {message.topic}")
     # content = f"{datetime.now().time()}  - Received message: {entity_data} on topic {message.topic} and dbuser is {db_user}"

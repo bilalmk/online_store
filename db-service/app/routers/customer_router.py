@@ -14,6 +14,13 @@ router = APIRouter(
     tags=["customers"],
 )
 
+"""
+End-Point handles customer login by verifying the username and password provided in the
+request,against stored customer data
+
+customer_crud is a dependency that is used to interact with customer data in the database. 
+it contains methods for retrieving customer information and verifying passwords
+"""
 @router.post("/login", response_model=PublicCustomer)
 async def login(login_request: LoginRequest, customer_crud=Depends(get_customer_crud)):
     username = login_request.username
@@ -30,6 +37,13 @@ async def login(login_request: LoginRequest, customer_crud=Depends(get_customer_
     
     return customer
 
+"""
+- End-Point retrieves a customer by ID and returns a PublicCustomer model, 
+raising a 404 error if the customer is not found
+
+- customer_crud class is a dependency that is used to interact with customer data in the database. 
+it contains methods for retrieving customer information
+"""
 @router.post("/customer", response_model=PublicCustomer)
 async def get_customer(customer_id: int = Form(...), customer_crud=Depends(get_customer_crud)):
     customer = customer_crud.get_customer_by_id(customer_id)
@@ -39,6 +53,14 @@ async def get_customer(customer_id: int = Form(...), customer_crud=Depends(get_c
 
     return customer
 
+
+"""
+- End-Point retrieves a list of customers and returns them as a response, 
+raising a 404 error if no customers are found
+
+- customer_crud class is a dependency that is used to interact with customer data in the database.
+it contains methods for retrieving customer information
+"""
 @router.get("/", response_model=list[PublicCustomer])
 async def get_customers(customer_crud=Depends(get_customer_crud)):
     customers = customer_crud.get_customers()
