@@ -18,8 +18,6 @@ branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 # from sqlalchemy.dialects.mysql import TINYINT
 
-
-
 def upgrade() -> None:
     op.add_column('orders', sa.Column('order_date', sa.TIMESTAMP, nullable=False))
     op.add_column('orders', sa.Column('shipping_address', sa.String(255), nullable=False))

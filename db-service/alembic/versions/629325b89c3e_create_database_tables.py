@@ -39,18 +39,18 @@ def upgrade() -> None:
         ),
     )
 
-    op.create_table(
-        "addresses",
-        sa.Column(
-            "id", sa.Integer, primary_key=True, nullable=False, autoincrement=True
-        ),
-        sa.Column("user_id", sa.Integer, sa.ForeignKey("users.id")),
-        sa.Column("address", sa.String(255), nullable=False),
-        sa.Column("city", sa.String(100), nullable=False),
-        sa.Column("state", sa.String(100), nullable=False),
-        sa.Column("postal_code", sa.String(20), nullable=False),
-        sa.Column("country", sa.String(100), nullable=False),
-    )
+    # op.create_table(
+    #     "addresses",
+    #     sa.Column(
+    #         "id", sa.Integer, primary_key=True, nullable=False, autoincrement=True
+    #     ),
+    #     sa.Column("user_id", sa.Integer, sa.ForeignKey("users.id")),
+    #     sa.Column("address", sa.String(255), nullable=False),
+    #     sa.Column("city", sa.String(100), nullable=False),
+    #     sa.Column("state", sa.String(100), nullable=False),
+    #     sa.Column("postal_code", sa.String(20), nullable=False),
+    #     sa.Column("country", sa.String(100), nullable=False),
+    # )
 
     # Creating table `brands`
     op.create_table(
@@ -133,25 +133,25 @@ def upgrade() -> None:
     )
 
     # Creating table `shoppingcart`
-    op.create_table(
-        "shoppingcart",
-        sa.Column(
-            "id", sa.Integer, primary_key=True, nullable=False, autoincrement=True
-        ),
-        sa.Column("user_id", sa.Integer, sa.ForeignKey("users.id")),
-        sa.Column("product_id", sa.Integer, sa.ForeignKey("products.id")),
-        sa.Column("quantity", sa.Integer, nullable=False),
-        sa.Column("added_at", sa.TIMESTAMP, server_default=sa.func.current_timestamp()),
-    )
+    # op.create_table(
+    #     "shoppingcart",
+    #     sa.Column(
+    #         "id", sa.Integer, primary_key=True, nullable=False, autoincrement=True
+    #     ),
+    #     sa.Column("user_id", sa.Integer, sa.ForeignKey("users.id")),
+    #     sa.Column("product_id", sa.Integer, sa.ForeignKey("products.id")),
+    #     sa.Column("quantity", sa.Integer, nullable=False),
+    #     sa.Column("added_at", sa.TIMESTAMP, server_default=sa.func.current_timestamp()),
+    # )
 
     # Creating table `users`
 
 
 def downgrade() -> None:
-    op.drop_table("shoppingcart")
+    # op.drop_table("shoppingcart")
     op.drop_table("products")
     op.drop_table("orders")
     op.drop_table("categories")
     op.drop_table("brands")
-    op.drop_table("addresses")
+    # op.drop_table("addresses")
     op.drop_table("users")

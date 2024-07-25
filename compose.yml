@@ -62,7 +62,7 @@ services:
       - ./db-service:/code
       - ./shared:/code/shared
     depends_on:
-      - mysql
+      #- mysql
       - postgres
       - broker
     ports:
@@ -77,7 +77,7 @@ services:
         - ./authentication:/code
         - ./shared:/code/shared
       depends_on:
-        - mysql
+        #- mysql
         - postgres
         - broker
       ports:
@@ -196,20 +196,20 @@ services:
     depends_on:
       - broker
 
-  mysql:
-    image: mysql:8.0
-    container_name: mysql-db
-    environment:
-      MYSQL_ALLOW_EMPTY_PASSWORD: "yes" 
-      MYSQL_DATABASE: imtiaz
-      MYSQL_USER: imtiaz
-      MYSQL_ROOT_USER: root
-      MYSQL_PASSWORD: as
-    ports:
-      - "3307:3306"
-    volumes:
-      - mysql-data:/var/lib/mysql
-      - ./mysql-init:/docker-entrypoint-initdb.d
+  # mysql:
+  #   image: mysql:8.0
+  #   container_name: mysql-db
+  #   environment:
+  #     MYSQL_ALLOW_EMPTY_PASSWORD: "yes" 
+  #     MYSQL_DATABASE: imtiaz
+  #     MYSQL_USER: imtiaz
+  #     MYSQL_ROOT_USER: root
+  #     MYSQL_PASSWORD: as
+  #   ports:
+  #     - "3307:3306"
+  #   volumes:
+  #     - mysql-data:/var/lib/mysql
+  #     - ./mysql-init:/docker-entrypoint-initdb.d
 
   postgres:
     image: postgres:latest  # Use the official PostgreSQL image
@@ -234,15 +234,15 @@ services:
       - "5050:80"
     depends_on:
       - postgres
-    volumes:
-      - E:\piaic\projects\db_backup:/var/lib/pgadmin/storage
+    # volumes:
+    #   - E:\piaic\projects\db_backup:/var/lib/pgadmin/storage
 
-  curl-test:
-    image: curlimages/curl:latest
-    container_name: curl-test
-    depends_on:
-      - db-service
-    command: ["sh", "-c", "while true; do curl -v db-service:8000; sleep 5; done"]      
+  # curl-test:
+  #   image: curlimages/curl:latest
+  #   container_name: curl-test
+  #   depends_on:
+  #     - db-service
+  #   command: ["sh", "-c", "while true; do curl -v db-service:8000; sleep 5; done"]      
 
 networks:
   default:  
