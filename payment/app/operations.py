@@ -110,7 +110,7 @@ async def get_customer_information(customer_id: int):
     based on a given customer ID.
     """
     payload = aiohttp.FormData()
-    payload.add_field("userid", customer_id)
+    payload.add_field("customer_id", customer_id)
     db_service_url = f"{config.DB_API_BASE_PATH}/customers/customer"
     async with config.client_session.post(db_service_url, data=payload) as response:
         if response.status != 200:

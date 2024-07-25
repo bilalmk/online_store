@@ -2,6 +2,7 @@ from datetime import datetime
 from decimal import Decimal
 import json
 from contextlib import asynccontextmanager
+import sys
 from typing import Annotated, AsyncGenerator
 from aiohttp import ClientSession, TCPConnector
 from fastapi import APIRouter, FastAPI, Depends, File, Form, HTTPException, UploadFile
@@ -66,11 +67,11 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     
     this will update the order information in the database after completing the payment process
     """
-    asyncio.create_task(
-        consume_events_order(
-            config.KAFKA_ORDER_TOPIC, config.KAFKA_ORDER_CONSUMER_GROUP_ID
-        )
-    )
+    # asyncio.create_task(
+    #     consume_events_order(
+    #         config.KAFKA_ORDER_TOPIC, config.KAFKA_ORDER_CONSUMER_GROUP_ID
+    #     )
+    # )
     
     """
     this will call the consume events payment function from kafka_consumer.py file to consume the subscribed 
@@ -137,6 +138,7 @@ async def make_payment(token: TokenData, payment_info: PaymentInfo):
     # GET CUSTOMER INFORMATION
     customer_id = order_info.get("customer_id")
     customer_info = await get_customer_information(customer_id)
+
     customer_instance = User(**customer_info)
     customer_info = User.model_validate(customer_instance)
 

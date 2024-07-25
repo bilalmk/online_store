@@ -144,7 +144,7 @@ async def update_brand(
         """
         get response back from db-service, 
         db-service is responsible to collect topic data 
-        perform db operation and produce response data to kafka topic        
+        perform db operation and produce response data to kafka topic      
         """
         status_message = await consume_response_from_kafka(consumer, brand_guid_id)
     finally:
