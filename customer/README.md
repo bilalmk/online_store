@@ -1,4 +1,4 @@
-*Customer Microservice:**
+**Customer Microservice:**
 
 The customer microservice is responsible for managing customer operations, including creating, updating and reading current logged in customer information, as well as authenticating customer. These users are authorized personnel who can update or view its information.
 
