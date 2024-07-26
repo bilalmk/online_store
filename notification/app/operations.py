@@ -4,7 +4,6 @@ import aiohttp
 from shared.models.token import TokenData
 from fastapi.security import OAuth2PasswordBearer
 from typing import Annotated
-import sys
 
 oauth2_authentication = OAuth2PasswordBearer(tokenUrl="token")
 
@@ -74,6 +73,4 @@ async def update_order_notification_status(order_id: int, notification_status=1)
             data = await response.json()
             return data
     except Exception as e:
-        print(str(e))
-        sys.stdout.flush()
         return None

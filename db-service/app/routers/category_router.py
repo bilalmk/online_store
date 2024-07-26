@@ -2,7 +2,6 @@ from shared.models.category import PublicCategory
 from app.config import sessionDep
 from app.crud.category_crud import Category_Crud
 from fastapi import Depends, HTTPException, APIRouter, Form
-from fastapi import APIRouter
 
 def get_category_crud(session: sessionDep) -> Category_Crud:
     return Category_Crud(session)

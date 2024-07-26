@@ -1,28 +1,17 @@
-from datetime import datetime
-from decimal import Decimal
-import json
 from contextlib import asynccontextmanager
-from typing import Annotated, AsyncGenerator
+from typing import AsyncGenerator
 from aiohttp import ClientSession, TCPConnector
 from fastapi import (
     APIRouter,
     FastAPI,
     Depends,
-    HTTPException,
 )
-from aiokafka import AIOKafkaProducer  # type: ignore
 from app.kafka_consumer import consume_events, produce_inventory_update
 
 from app import config
 from app.operations import get_token
 
-from shared.models.category import (
-    CreateCategory,
-    PublicCategory,
-    UpdateCategory,
-)
 from shared.models.order_detail_model import PublicOrderWithDetail
-from shared.models.token import TokenData
 import asyncio
 
 
@@ -92,7 +81,5 @@ def check():
 """
 @app.post("/inventory_update")
 async def inventory_update(order_information: PublicOrderWithDetail):
-    # print("inventory update route")
-    # print(order_information)
     await produce_inventory_update(order_information)
     return {"message": "Inventory updated"}

@@ -24,10 +24,8 @@ from app.operations import (
     get_category_list,
     get_brand_list,
 )
-from shared.models.brand import PublicBrand
-from shared.models.category import PublicCategory
-from shared.models.product import CreateProduct, Product, PublicProduct, UpdateProduct
-from shared.models.token import Token, TokenData
+from shared.models.product import CreateProduct, PublicProduct, UpdateProduct
+from shared.models.token import TokenData
 
 
 @asynccontextmanager
@@ -138,7 +136,6 @@ async def create(
     try:
         obj = json.dumps(message, cls=CustomJSONEncoder).encode("utf-8")
         await producer.send(config.KAFKA_PRODUCT_TOPIC, value=obj)
-        # await asyncio.sleep(10)
     except Exception as e:
         return str(e)
 
@@ -172,8 +169,7 @@ async def create(
 async def update_product(
     product: UpdateProduct,
     product_guid_id: str,
-    producer: Annotated[AIOKafkaProducer, Depends(get_kafka_producer)],
-    token: Annotated[TokenData, Depends(get_token)],
+    producer: Annotated[AIOKafkaProducer, Depends(get_kafka_producer)]
 ):
     product_data = product.model_dump(exclude_unset=True)
 
@@ -215,8 +211,7 @@ async def update_product(
 @router.delete("/delete/{product_guid_id}")
 async def delete_product(
     product_guid_id: str,
-    producer: Annotated[AIOKafkaProducer, Depends(get_kafka_producer)],
-    token: Annotated[TokenData, Depends(get_token)],
+    producer: Annotated[AIOKafkaProducer, Depends(get_kafka_producer)]
 ):
     try:
         message = {
@@ -268,7 +263,7 @@ async def get_products():
 
     for product in products:
         product["category_name"] = cat_dict.get(product["category_id"], None)
-        product["brand_name"] = cat_dict.get(product["brand_id"], None)
+        product["brand_name"] = brand_dict.get(product["brand_id"], None)
     return products
 
 

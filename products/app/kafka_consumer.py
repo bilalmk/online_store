@@ -51,7 +51,6 @@ async def consume_response_from_kafka(consumer, request_id):
                 return {"message": message}
         except asyncio.TimeoutError:
             return {"message": "No messages received."}
-            break  # or continue, based on your use case
 
 async def consume_events(topic, group_id):
     """

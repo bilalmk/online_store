@@ -4,7 +4,7 @@ import json
 from contextlib import asynccontextmanager
 from typing import Annotated, AsyncGenerator
 from aiohttp import ClientSession, TCPConnector
-from fastapi import APIRouter, FastAPI, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, FastAPI, Depends
 from aiokafka import AIOKafkaProducer  # type: ignore
 from app.kafka_producer import get_kafka_producer
 from app.kafka_consumer import (
@@ -16,8 +16,8 @@ from app import config
 from app.operations import get_order, get_token
 from shared.models.order import CreateOrder, Order, PublicOrder
 #from shared.models.order_detail import CreateOrderDetail
-from shared.models.order_detail_model import CreateOrderWithDetail, PublicOrderWithDetail
-from shared.models.token import  TokenData
+from shared.models.order_detail_model import CreateOrderWithDetail
+from shared.models.token import TokenData
 
 
 @asynccontextmanager
@@ -73,8 +73,7 @@ class CustomJSONEncoder(json.JSONEncoder):
 @router.post("/create")
 async def create(
     order: CreateOrderWithDetail,
-    producer: Annotated[AIOKafkaProducer, Depends(get_kafka_producer)],
-    token: Annotated[TokenData, Depends(get_token)]
+    producer: Annotated[AIOKafkaProducer, Depends(get_kafka_producer)]
 ):
     if order.order_details:
         for order_detail in order.order_details:
@@ -92,7 +91,6 @@ async def create(
     try:
         obj = json.dumps(message, cls=CustomJSONEncoder).encode("utf-8")
         await producer.send(config.KAFKA_ORDER_WITH_DETAIL_TOPIC, value=obj)
-        # await asyncio.sleep(10)
     except Exception as e:
         return str(e)
 

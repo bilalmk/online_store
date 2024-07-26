@@ -12,7 +12,6 @@ from app.operations import (
     get_customer_list,
 )
 
-# from app.kafka_consumer import consume_events
 from app.kafka_producer import get_kafka_producer
 from app.kafka_consumer import (
     # consume_events,
@@ -29,9 +28,6 @@ oauth2_authentication = OAuth2PasswordBearer(tokenUrl="token")
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     print("starting lifespan process")
-    # await asyncio.sleep(10)
-    # task = asyncio.create_task(consume_events(config.KAFKA_customer_DB_RESPONSE))
-    
     """
     # The line `config.client_session = ClientSession(connector=TCPConnector(limit=100))` is creating
     # an instance of `ClientSession` with a `TCPConnector` that has a limit of 100 connections. This
@@ -88,12 +84,9 @@ async def create(
         "data": customer.dict(),
     }
 
-    # print(type(customer))
     obj = json.dumps(message).encode("utf-8")
     await producer.send(config.KAFKA_CUSTOMER_TOPIC, value=obj)
-    # await asyncio.sleep(10)
 
-    # raise HTTPException(status_code=500, detail="No response from db-service")
     consumer = await get_kafka_consumer()
     try:
         """

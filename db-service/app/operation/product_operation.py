@@ -1,10 +1,9 @@
 import json
 from app.crud.product_crud import Product_Crud
-from shared.models.product import CreateProduct, UpdateProduct
+from shared.models.product import CreateProduct
 from app.config import get_session
 from app import config
 from app.kafka_producer import send_producer
-import sys
 
 """
 This class will use to handle curd operations for product data.
@@ -31,7 +30,6 @@ class ProductOperation:
         self.operation = data.get("operation")
         self.entity_data = data.get("data")
         self.db_data = None
-        # self.operations()
 
     async def operations(self):
         with get_session() as session:

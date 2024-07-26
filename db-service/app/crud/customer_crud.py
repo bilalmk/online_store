@@ -1,5 +1,3 @@
-import sys
-
 from fastapi import HTTPException
 from shared.models.customer import CreateCustomer, Customer, PublicCustomer, DBCustomer, UpdateCustomer
 from passlib.context import CryptContext
@@ -56,8 +54,6 @@ class Customer_Crud:
             self.session.rollback()
             return {"status": "duplicate"}
         except Exception as e:
-            print(str(e))
-            sys.stdout.flush()
             self.session.rollback()
             return {"status": "failed"}
         

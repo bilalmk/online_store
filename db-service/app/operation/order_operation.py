@@ -6,23 +6,8 @@ from shared.models.order import CreateOrder
 from app.config import get_session
 from app import config
 from app.kafka_producer import send_producer
-import sys
 
 from shared.models.order_detail_model import CreateOrderWithDetail
-
-
-# class CustomJSONEncoder(json.JSONEncoder):
-#     """ 
-#     CustomJSONEncoder is a custom JSON encoder class that extends the default JSON encoder
-#     from the Python standard library. It is used to handle special cases when encoding
-#     objects like Decimal and datetime.
-#     """
-#     def default(self, obj):
-#         if isinstance(obj, Decimal):
-#             return float(obj)
-#         elif isinstance(obj, datetime):
-#             return obj.isoformat()
-#         return super(CustomJSONEncoder, self).default(obj)
 
 """
 This class will use to handle curd operations for order data.
@@ -51,7 +36,6 @@ class OrderOperation:
         self.operation = data.get("operation")
         self.entity_data = data.get("data")
         self.db_data = None
-        # self.operations()
 
     async def operations(self):
         with get_session() as session:
@@ -83,10 +67,6 @@ class OrderOperation:
                             "order": order_response,
                         }
                 except Exception as ex:
-                    print("operation error")
-                    print("======================")
-                    print(str(ex))
-                    sys.stdout.flush()
                     response = {
                         "request_id": self.request_id,
                         "status": status,
@@ -95,19 +75,3 @@ class OrderOperation:
 
                 obj = json.dumps(response).encode("utf-8")
                 await send_producer(config.KAFKA_ORDERS_DB_RESPONSE, obj)
-
-            # elif self.operation == "update":
-
-            #     product_crud = Product_Crud(session)
-            #     status = product_crud.update_product(self.entity_data, self.request_id)
-            #     response = {"request_id": self.request_id, "status": status}
-            #     obj = json.dumps(response).encode("utf-8")
-            #     await send_producer(config.KAFKA_PRODUCTS_DB_RESPONSE, obj)
-
-            # elif self.operation == "delete":
-
-            #     product_crud = Product_Crud(session)
-            #     status = product_crud.delete_product(self.request_id)
-            #     response = {"request_id": self.request_id, "status": status}
-            #     obj = json.dumps(response).encode("utf-8")
-            #     await send_producer(config.KAFKA_PRODUCTS_DB_RESPONSE, obj)

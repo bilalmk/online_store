@@ -3,8 +3,6 @@ from app.config import sessionDep
 from app.crud.user_crud import User_Crud
 from fastapi import Depends, HTTPException, APIRouter, Form
 from shared.models.user import LoginRequest
-import sys
-
 
 def get_user_crud(session: sessionDep) -> User_Crud:
     return User_Crud(session)

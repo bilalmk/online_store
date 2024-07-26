@@ -1,7 +1,5 @@
-import sys
-
 from fastapi import HTTPException
-from shared.models.user import CreateUser, User, PublicUser, DBUser, UpdateUser
+from shared.models.user import CreateUser, User, UpdateUser
 from passlib.context import CryptContext
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
@@ -55,8 +53,6 @@ class User_Crud:
             self.session.rollback()
             return {"status": "duplicate"}
         except Exception as e:
-            print(str(e))
-            sys.stdout.flush()
             self.session.rollback()
             return {"status": "failed"}
 

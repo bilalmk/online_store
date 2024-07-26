@@ -1,5 +1,3 @@
-import sys
-
 from fastapi import HTTPException
 from shared.models.inventory import InventoryProductUpdate
 from shared.models.product import CreateProduct, Product, UpdateProduct
@@ -47,8 +45,6 @@ class Product_Crud:
             self.session.rollback()
             return {"status": "duplicate"}
         except Exception as e:
-            print(str(e))
-            sys.stdout.flush()
             self.session.rollback()
             return {"status": "failed"}
 
@@ -199,15 +195,7 @@ class Product_Crud:
             3. "failed-update" if an exception occurs during the operation
         """
         try:
-            # print("update_inventory_db_function")
-            # sys.stdout.flush()
-            # print(inventory_info)
-            # sys.stdout.flush()
             for info in inventory_info:
-                # print("inside loop")
-                # sys.stdout.flush()
-                # print(info)
-                # sys.stdout.flush()
                 db_product: Product = (
                     self.session.query(Product)
                     .filter(Product.id == info.product_id)
@@ -224,9 +212,5 @@ class Product_Crud:
             self.session.commit()
             return {"status": "success-update"}
         except Exception as e:
-            print("execption from crud")
-            sys.stdout.flush()
-            print(str(e))
-            sys.stdout.flush()
             self.session.rollback()
             return {"status": "failed-update"}

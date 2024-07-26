@@ -1,6 +1,3 @@
-import sys
-
-from fastapi import HTTPException
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 
@@ -15,7 +12,7 @@ class Payment_Crud:
         # Initializes the class with a database session
         self.session = session
 
-    #Attempts to create a new payment record in the database, handling integrity errors and other exceptions.
+    # Attempts to create a new payment record in the database, handling integrity errors and other exceptions.
     def create_payment(self, payment: CreatePayment):
         """
         The function creates a new payment in a database, handling cases where the payment already exists,
@@ -51,7 +48,5 @@ class Payment_Crud:
             self.session.rollback()
             return {"status": False, "message": "duplicate Payment"}
         except Exception as e:
-            print(str(e))
-            sys.stdout.flush()
             self.session.rollback()
             return {"status": False, "message": str(e)}

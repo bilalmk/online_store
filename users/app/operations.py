@@ -1,12 +1,11 @@
-import sys
 from app import config
 import json
 from fastapi import Depends, HTTPException, status
 import aiohttp
-from shared.models.user import User,PublicUser
+from shared.models.user import User, PublicUser
 from shared.models.token import TokenData
 from fastapi.security import OAuth2PasswordBearer
-from typing import Annotated, AsyncGenerator
+from typing import Annotated
 
 oauth2_authentication = OAuth2PasswordBearer(tokenUrl="token")
 
@@ -25,7 +24,6 @@ async def authenticate_user(username: str, password: str):
     ) as response:
         if response.status != 200:
             res = await response.json()
-            print(res)
             raise HTTPException(status_code=response.status, detail=res["detail"])
         data = await response.json()
         return data
@@ -56,8 +54,6 @@ async def get_user_list():
     db_service_url = f"{config.DB_API_BASE_PATH}/users/"
     async with config.client_session.get(db_service_url) as response:
         data = await response.json()
-        print(data)
-        print(response.status)
         if response.status != 200:
             raise HTTPException(status_code=response.status, detail=data["detail"])
         return data

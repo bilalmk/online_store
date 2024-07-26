@@ -82,19 +82,10 @@ created the order and received its payment
 @router.put("/inventory")
 async def update_inventory(inventory_info: list[InventoryProductUpdate], product_crud=Depends(get_product_crud)):
     try:
-        # print("inventory_info")
-        # sys.stdout.flush()
         product = product_crud.update_inventory(inventory_info)
-        # print("product")
-        # sys.stdout.flush()
-        # print(product)
-        # sys.stdout.flush()
         if not product:
             raise HTTPException(status_code=404, detail="Product not found")
     except Exception as e:
-        print("Exception from route")
-        sys.stdout.flush()
-        print(str(e))
-        sys.stdout.flush()
+        pass
 
     return product

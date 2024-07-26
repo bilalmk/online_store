@@ -1,5 +1,3 @@
-import sys
-
 from fastapi import HTTPException
 from shared.models.brand import CreateBrand, Brand, UpdateBrand
 from sqlalchemy.exc import IntegrityError
@@ -57,8 +55,6 @@ class Brand_Crud:
             self.session.rollback()
             return {"status": "duplicate"}
         except Exception as e:
-            print(str(e))
-            sys.stdout.flush()
             self.session.rollback()
             return {"status": "failed"}
 

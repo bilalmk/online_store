@@ -1,10 +1,7 @@
 import json
-import asyncio
-import sys
 from aiokafka import AIOKafkaConsumer  # type: ignore
 from app import config
 from app.kafka_producer import get_kafka_producer
-from shared.models.inventory import InventoryProductUpdate
 from shared.models.order_detail_model import PublicOrderWithDetail
 
 responses = {}
@@ -64,8 +61,5 @@ async def produce_inventory_update(order_information: PublicOrderWithDetail):
         async with get_kafka_producer() as producer:
             obj = json.dumps(message).encode("utf-8")
             await producer.send(config.KAFKA_INVENTORY_TOPIC, value=obj)
-        # await asyncio.sleep(10)
     except Exception as e:
-        print(str(e))
-        sys.stdout.flush()
         return str(e)

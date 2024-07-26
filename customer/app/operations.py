@@ -5,7 +5,7 @@ import aiohttp
 from shared.models.customer import Customer, PublicCustomer
 from shared.models.token import CustomerTokenData
 from fastapi.security import OAuth2PasswordBearer
-from typing import Annotated, AsyncGenerator
+from typing import Annotated
 
 oauth2_authentication = OAuth2PasswordBearer(tokenUrl="token")
 
@@ -55,8 +55,6 @@ async def get_customer_list():
     db_service_url = f"{config.DB_API_BASE_PATH}/customers/"
     async with config.client_session.get(db_service_url) as response:
         data = await response.json()
-        print(data)
-        print(response.status)
         if response.status != 200:
             raise HTTPException(status_code=response.status, detail=data["detail"])
         return data

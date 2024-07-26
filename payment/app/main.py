@@ -2,36 +2,25 @@ from datetime import datetime
 from decimal import Decimal
 import json
 from contextlib import asynccontextmanager
-import sys
 from typing import Annotated, AsyncGenerator
 from aiohttp import ClientSession, TCPConnector
-from fastapi import APIRouter, FastAPI, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, FastAPI, Depends, HTTPException
 from aiokafka import AIOKafkaProducer  # type: ignore
 from app.kafka_producer import get_kafka_producer
-from app.kafka_consumer import (
-    # consume_events_order,
-    consume_events_payment,
-    get_kafka_consumer,
-    # consume_response_from_kafka,
-)
+from app.kafka_consumer import consume_events_payment
 
 from app import config
 from app.operations import (
     get_customer_information,
-    get_order_by_guid,
     get_order_by_id,
     get_products_by_ids,
     get_token,
     update_payment_status,
 )
 
-# from shared.models.brand import PublicBrand
-# from shared.models.category import PublicCategory
-# from shared.models.product import CreateProduct, Product, PublicProduct, UpdateProduct
 from shared.models.notification import CreateNotification
 from shared.models.order_detail_model import PublicOrderWithDetail
 
-# from shared.models.order_detail import PublicOrderDetail
 from shared.models.payment import (
     CreatePayment,
     PaymentFailure,
@@ -62,18 +51,6 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     The `asyncio.create_task()` function is used to create a task to run a coroutine concurrently in
     the background without blocking the main execution flow.
     
-    this will call the consume events order function from kafka_consumer.py file to consume the subscribed 
-    order topic against the order consumer group id
-    
-    this will update the order information in the database after completing the payment process
-    """
-    # asyncio.create_task(
-    #     consume_events_order(
-    #         config.KAFKA_ORDER_TOPIC, config.KAFKA_ORDER_CONSUMER_GROUP_ID
-    #     )
-    # )
-    
-    """
     this will call the consume events payment function from kafka_consumer.py file to consume the subscribed 
     payment topic against the payment consumer group id
     
@@ -151,10 +128,6 @@ async def make_payment(token: TokenData, payment_info: PaymentInfo):
 
     # GET DICTIONARY OF PRODUCT ID AND PRODUCT NAME
     product_dict = {product["id"]: product["name"] for product in products}
-
-    # ATTACHED PRODUCT NAME WITH ORDER DETAIL USING PRODUCT ID
-    # for order_detail in order_info.get("order_details"):
-    #     order_detail["product_name"] = product_dict[order_detail["product_id"]]
 
     # order_detail_instance = PublicOrderDetail(order_detail[0])
     order_instance = PublicOrderWithDetail(**order_info)
@@ -237,18 +210,7 @@ async def make_payment(token: TokenData, payment_info: PaymentInfo):
         line_item_1.unitPrice = str(order_detail.unit_price)
         line_items.lineItem.append(line_item_1)
 
-    # line_item_2 = apicontractsv1.lineItemType()
-    # line_item_2.itemId = "67890"
-    # line_item_2.name = "second"
-    # line_item_2.description = "Here's the second line item"
-    # line_item_2.quantity = "3"
-    # line_item_2.unitPrice = "7.95"
-
-    # build the array of line items
-    # line_items = apicontractsv1.ArrayOfLineItem()
-    # line_items.lineItem.append(line_item_1)
-    # line_items.lineItem.append(line_item_2)
-
+    # Create the payment transaction request
     # Create a transactionRequestType object and add the previous objects to it.
     transactionrequest = apicontractsv1.transactionRequestType()
     transactionrequest.transactionType = "authCaptureTransaction"
@@ -259,12 +221,6 @@ async def make_payment(token: TokenData, payment_info: PaymentInfo):
     transactionrequest.customer = customerData
     transactionrequest.transactionSettings = settings
     transactionrequest.lineItems = line_items
-
-    # Create the payment transaction request
-    # transactionrequest = apicontractsv1.transactionRequestType()
-    # transactionrequest.transactionType = "authCaptureTransaction"
-    # transactionrequest.amount = payment_info.amount
-    # transactionrequest.payment = payment
 
     # Assemble the complete transaction request
     createtransactionrequest = apicontractsv1.createTransactionRequest()
@@ -296,7 +252,6 @@ async def make_payment(token: TokenData, payment_info: PaymentInfo):
                 payment_status.status = True
                 payment_status.message = message
                 return payment_status, order_info, customer_info
-                # return {"status": True, "message": message}
             else:
                 message = PaymentFailure()
                 message.message = "Failed Transaction"
@@ -309,7 +264,7 @@ async def make_payment(token: TokenData, payment_info: PaymentInfo):
                 payment_status.status = False
                 payment_status.message = message
                 return payment_status, order_info, customer_info
-                # return {"status": False, "message": message}
+
         # Or, print errors if the API request wasn't successful
         else:
             message = PaymentFailure()
@@ -327,7 +282,6 @@ async def make_payment(token: TokenData, payment_info: PaymentInfo):
             payment_status.status = False
             payment_status.message = message
             return payment_status, order_info, customer_info
-            # return {"status": False, "message": message}
     else:
         raise HTTPException(status_code=400, detail="Transaction Failed")
 
@@ -358,7 +312,6 @@ async def produce_create_payment(
     try:
         obj = json.dumps(message, cls=CustomJSONEncoder).encode("utf-8")
         await producer.send(config.KAFKA_PAYMENT_TOPIC, value=obj)
-        # await asyncio.sleep(10)
     except Exception as e:
         return str(e)
 
@@ -386,7 +339,6 @@ async def produce_notification_and_inventory(
     try:
         obj = json.dumps(message, cls=CustomJSONEncoder).encode("utf-8")
         await producer.send(config.KAFKA_NOTIFICATION_TOPIC, value=obj)
-        # await asyncio.sleep(10)
     except Exception as e:
         return str(e)
 
@@ -422,56 +374,5 @@ async def process_payment(
         await produce_notification_and_inventory(order_info, customer_info, producer)
 
     return payment_status
-
-
-# TESTING FUNCTION
-@router.post("/pay1")
-async def create(
-    producer: Annotated[AIOKafkaProducer, Depends(get_kafka_producer)],
-    token: Annotated[TokenData, Depends(get_token)],
-):
-    # product = CreateProduct(
-    #     name=name,
-    #     price=price,
-    #     stock_quantity=stock_quantity,
-    #     category_id=category_id,
-    #     brand_id=brand_id,
-    #     created_by=token.userid,
-    #     status=status
-    # )
-
-    # if file:
-    #     product.image_name = f"{product.guid}_{file.filename}"
-
-    # product_dict = product.dict()
-
-    # message = {
-    #     "request_id": product.guid,
-    #     "operation": "create",
-    #     "entity": "product",
-    #     "data": product_dict,
-    # }
-
-    # try:
-    #     obj = json.dumps(message, cls=CustomJSONEncoder).encode("utf-8")
-    #     await producer.send(config.KAFKA_PRODUCT_TOPIC, value=obj)
-    #     # await asyncio.sleep(10)
-    # except Exception as e:
-    #     return str(e)
-
-    # consumer = await get_kafka_consumer()
-    # try:
-    #     status_message = await consume_response_from_kafka(consumer, product.guid)
-    # finally:
-    #     await consumer.stop()
-
-    # if status_message:
-    #     if file:
-    #         await save_file(file, product.guid)
-    #     return status_message
-
-    status_message = {"message": "Created"}
-    return status_message
-
 
 app.include_router(router)

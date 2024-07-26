@@ -1,5 +1,4 @@
 from app import config
-import json
 from fastapi import Depends, HTTPException, status
 import aiohttp
 from shared.models.token import TokenData

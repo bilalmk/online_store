@@ -5,8 +5,6 @@ from fastapi import Depends, FastAPI, HTTPException
 from app import config
 from alembic.config import Config
 
-# from app.kafka_consumer import consume_events
-# from app.kafka_producer import get_kafka_producer
 from app.kafka_consumer import consume_events
 from alembic import command
 import concurrent.futures
@@ -107,10 +105,6 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """
     asyncio.create_task(run_alembic_upgrade())
 
-    # asyncio.create_task(
-    #     command.upgrade(alembic_cfg, "head")
-    # )
-
     yield
 
 
@@ -134,7 +128,6 @@ async def health():
     return {"status": "ok"}
 
 
-
 """test end point to execute db migration manually"""
 @app.get("/dbup")
 async def dbup():
@@ -143,8 +136,3 @@ async def dbup():
         return {"status": "ok"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-
-# @app.get("/")
-# def main():
-#     return {"message": "Hello World from db-service"}

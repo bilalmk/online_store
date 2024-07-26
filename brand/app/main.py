@@ -4,7 +4,7 @@ import json
 from contextlib import asynccontextmanager
 from typing import Annotated, AsyncGenerator
 from aiohttp import ClientSession, TCPConnector
-from fastapi import APIRouter, FastAPI, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, FastAPI, Depends, HTTPException, UploadFile
 from aiokafka import AIOKafkaProducer  # type: ignore
 from app.kafka_producer import get_kafka_producer
 from app.kafka_consumer import (
@@ -19,7 +19,7 @@ from shared.models.token import TokenData
 from app.exceptions.handler import validation_exception_handler, http_exception_handler
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.exceptions import RequestValidationError
-import json
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
@@ -92,7 +92,6 @@ async def create(
     try:
         obj = json.dumps(message, cls=CustomJSONEncoder).encode("utf-8")
         await producer.send(config.KAFKA_BRAND_TOPIC, value=obj)
-        # await asyncio.sleep(10)
     except Exception as e:
         return str(e)
 

@@ -1,5 +1,4 @@
 from contextlib import asynccontextmanager
-import sys
 from typing import Annotated, AsyncGenerator
 from fastapi import Depends, FastAPI, APIRouter, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -12,10 +11,8 @@ from app.operations import (
     get_user_list,
 )
 
-# from app.kafka_consumer import consume_events
 from app.kafka_producer import get_kafka_producer
 from app.kafka_consumer import (
-    # consume_events,
     get_kafka_consumer,
     consume_response_from_kafka,
 )
@@ -29,9 +26,6 @@ oauth2_authentication = OAuth2PasswordBearer(tokenUrl="token")
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     print("starting lifespan process")
-    # await asyncio.sleep(10)
-    # task = asyncio.create_task(consume_events(config.KAFKA_USER_DB_RESPONSE))
-    
     # The line `config.client_session = ClientSession(connector=TCPConnector(limit=100))` is creating
     # an instance of `ClientSession` with a `TCPConnector` that has a limit of 100 connections. This
     # is used to manage connections to external services. The `limit=100` parameter sets the maximum number of simultaneous
@@ -86,12 +80,9 @@ async def create(
         "data": user.dict(),
     }
 
-    # print(type(user))
     obj = json.dumps(message).encode("utf-8")
     await producer.send(config.KAFKA_USER_TOPIC, value=obj)
-    # await asyncio.sleep(10)
 
-    # raise HTTPException(status_code=500, detail="No response from db-service")
     consumer = await get_kafka_consumer()
     try:
         """

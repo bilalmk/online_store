@@ -1,6 +1,4 @@
-import sys
 from app import config
-import json
 from fastapi import Depends, HTTPException, status
 import aiohttp
 from shared.models.payment import CreatePayment
@@ -129,7 +127,6 @@ async def update_payment_status(order_id: int, payment_status: str = "paid"):
     payload.add_field("payment_status", payment_status)
     db_service_url = f"{config.DB_API_BASE_PATH}/orders/update_order_payment_status"
     async with config.client_session.patch(db_service_url, data=payload) as response:
-        print(response.status)
         if response.status != 200:
             return None
         data = await response.json()

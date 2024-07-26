@@ -1,6 +1,4 @@
-import sys
 from app import config
-import json
 from fastapi import Depends, HTTPException, status
 import aiohttp
 from shared.models.inventory import InventoryProductUpdate
@@ -142,18 +140,9 @@ async def update_product_inventory(inventory_data: list[InventoryProductUpdate])
     This function updates product inventory data by sending a PUT request to a products
     db-service microservice URL with the provided inventory data.
     """
-    # print("update_product_inventory1")
-    # print(inventory_data.get("inventory_info"))
-    # sys.stdout.flush()
     db_service_url = f"{config.DB_API_BASE_PATH}/products/inventory"
     async with config.client_session.put(db_service_url, json=inventory_data.get("inventory_info")) as response:
-        # print("response")
-        # print(response)
-        # sys.stdout.flush()
         if response.status != 200:
             return None
         data = await response.json()
-        # print("update_product_inventory_response")
-        # print(data)
-        # sys.stdout.flush()
         return data

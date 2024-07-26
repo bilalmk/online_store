@@ -1,6 +1,3 @@
-import json
-import sys
-
 from fastapi import HTTPException
 from shared.models.order import CreateOrder, Order
 from shared.models.order_detail import CreateOrderDetail, OrderDetail
@@ -95,10 +92,6 @@ class Order_Crud:
             self.session.rollback()
             return {"error": True, "status": "duplicate"}
         except Exception as e:
-            print("crud error")
-            print("=====================")
-            print(str(e))
-            sys.stdout.flush()
             self.session.rollback()
             return {"error": True, "status": "failed"}
 
@@ -208,56 +201,4 @@ class Order_Crud:
             
             return order
         except Exception as e:
-            print(str(e))
-            sys.stdout.flush()
             raise HTTPException(status_code=500, detail=str(e))
-
-    # def update_product(self, product: UpdateProduct, request_id: str):
-    #     try:
-    #         db_product: Product = (
-    #             self.session.query(Product)
-    #             .filter(Product.guid == request_id)
-    #             .filter(Product.status == 1)
-    #             .first()
-    #         )
-
-    #         if not db_product:
-    #             return {"status": "not-found"}
-
-    #         db_product.sqlmodel_update(product)
-    #         self.session.add(db_product)
-    #         self.session.commit()
-    #         self.session.refresh(db_product)
-    #         return {"status": "success-update"}
-    #     except Exception as e:
-    #         self.session.rollback()
-    #         return {"status": "failed-update"}
-
-    # def delete_product(self, request_id: str):
-    #     try:
-
-    #         statement = (
-    #             select(Product).where(Product.guid == request_id).where(Product.status == 1)
-    #         )
-    #         db_product = self.session.exec(statement).first()
-
-    #         if not db_product:
-    #             return {"status": "not-found"}
-
-    #         db_product.status = 2
-    #         self.session.commit()
-    #         return {"status": "success-delete"}
-
-    #     except Exception as e:
-    #         self.session.rollback()
-    #         return {"status": "failed-delete"}
-
-    # def get_product(self, id):
-    #     try:
-    #         statement = select(Product).where(Product.id == id).where(Product.status == 1)
-    #         product = self.session.exec(statement).first()
-    #         if not product:
-    #             return None
-    #         return product
-    #     except Exception as e:
-    #         raise HTTPException(status_code=500, detail=str(e))

@@ -66,10 +66,7 @@ async def consume_events(topic, group_id):
 
 """ Create a log message function to log the errors in text bases log files"""
 def log_message(entity_data, topic):
-    # print(f"Received message: {message.value.decode()} on topic {message.topic}")
-    # content = f"{datetime.now().time()}  - Received message: {entity_data} on topic {message.topic} and dbuser is {db_user}"
-
-    filename = "example.txt"
+    filename = "log.txt"
     content = (
         f"{datetime.now().time()}  - Received message: {entity_data} on topic {topic}"
     )

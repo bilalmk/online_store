@@ -1,6 +1,5 @@
 import json
 import asyncio
-import sys
 from aiokafka import AIOKafkaConsumer  # type: ignore
 from app import config
 
@@ -51,7 +50,6 @@ async def consume_response_from_kafka(consumer, request_id):
                 return {"message": message, "order": order}
         except asyncio.TimeoutError:
             return {"message": "No messages received."}
-            break  # or continue, based on your use case
 
 
 async def get_kafka_consumer():

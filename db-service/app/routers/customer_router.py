@@ -3,7 +3,6 @@ from app.config import sessionDep
 from app.crud.customer_crud import Customer_Crud
 from fastapi import Depends, HTTPException, APIRouter, Form
 from shared.models.customer import LoginRequest
-import sys
 
 
 def get_customer_crud(session: sessionDep) -> Customer_Crud:

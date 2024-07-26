@@ -1,9 +1,7 @@
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import json
-import asyncio
 import smtplib
-import sys
 from aiokafka import AIOKafkaConsumer  # type: ignore
 from app import config
 from app.operations import update_order_notification_status
@@ -118,13 +116,10 @@ async def send_email(info: CreateNotification):
         # server.login(sender_email, password)
         # server.sendmail(sender_email, to,  message.as_string())
         # server.quit()
+        
         # Connect to Gmail's SMTP server
         with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
             server.login(sender_email, password)
             server.sendmail(sender_email, to, message.as_string())
     except Exception as e:
-        print(str(e))
-        sys.stdout.flush()
         pass
-        # can log the error
-        # raise HTTPException(status_code=500, detail=str(e))

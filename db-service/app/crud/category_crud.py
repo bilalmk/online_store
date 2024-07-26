@@ -1,5 +1,3 @@
-import sys
-
 from fastapi import HTTPException
 from shared.models.category import CreateCategory, Category, UpdateCategory
 from sqlalchemy.exc import IntegrityError
@@ -63,8 +61,6 @@ class Category_Crud:
             self.session.rollback()
             return {"status": "duplicate"}
         except Exception as e:
-            print(str(e))
-            sys.stdout.flush()
             self.session.rollback()
             return {"status": "failed"}
 

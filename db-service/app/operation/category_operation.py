@@ -4,7 +4,6 @@ from shared.models.category import CreateCategory
 from app.config import get_session
 from app import config
 from app.kafka_producer import send_producer
-import sys
 
 """
 This class will use to handle curd operations for category data.
@@ -32,7 +31,6 @@ class CategoryOperation:
         self.operation = data.get("operation")
         self.entity_data = data.get("data")
         self.db_data = None
-        # self.operations()
 
     async def operations(self):
         with get_session() as session:

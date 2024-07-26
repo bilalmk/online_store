@@ -28,7 +28,7 @@ from shared.models.category import (
     PublicCategory,
     UpdateCategory,
 )
-from shared.models.token import Token, TokenData
+from shared.models.token import TokenData
 
 
 @asynccontextmanager
@@ -90,7 +90,6 @@ class CustomJSONEncoder(json.JSONEncoder):
 async def create(
     category: CreateCategory,
     producer: Annotated[AIOKafkaProducer, Depends(get_kafka_producer)],
-    token: Annotated[TokenData, Depends(get_token)],
 ):
     category_dict = category.dict()
 
@@ -136,8 +135,7 @@ async def create(
 async def update_category(
     category: UpdateCategory,
     category_guid_id: str,
-    producer: Annotated[AIOKafkaProducer, Depends(get_kafka_producer)],
-    token: Annotated[TokenData, Depends(get_token)],
+    producer: Annotated[AIOKafkaProducer, Depends(get_kafka_producer)]
 ):
 
     try:
@@ -186,8 +184,7 @@ async def update_category(
 @router.delete("/delete/{category_guid_id}")
 async def delete_category(
     category_guid_id: str,
-    producer: Annotated[AIOKafkaProducer, Depends(get_kafka_producer)],
-    token: Annotated[TokenData, Depends(get_token)],
+    producer: Annotated[AIOKafkaProducer, Depends(get_kafka_producer)]
 ):
     try:
         message = {

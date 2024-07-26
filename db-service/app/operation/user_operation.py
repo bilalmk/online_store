@@ -1,10 +1,9 @@
 import json
 from app.crud.user_crud import User_Crud
-from shared.models.user import CreateUser, UpdateUser
+from shared.models.user import CreateUser
 from app.config import get_session
 from app import config
 from app.kafka_producer import send_producer
-import sys
 
 
 """
@@ -33,7 +32,6 @@ class UserOperation:
         self.operation = data.get("operation")
         self.entity_data = data.get("data")
         self.db_data = None
-        # self.operations()
 
     async def operations(self):
         with get_session() as session:
